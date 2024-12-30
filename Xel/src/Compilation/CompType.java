@@ -25,9 +25,14 @@ public enum CompType {
     LINOP,      // Logical Binary Operations    {&&, ||}
 
     VTYPE,      // Any Variable Type
-    BYTE,SHORT,INT,LONG,FLOAT,DOUBLE,STRING,CHAR,    // Specific Variable Types
+    BOOL,CHAR,BYTE,SHORT,INT,LONG,FLOAT,DOUBLE,STRING,    // Specific Variable Types
 
-    INVALID
+    LIT,        // Literal
+    VAR,        // Variable
+
+    ADD,SUB,MULT,DIV,MOD,POW,
+
+    INVALID,
 }
 
 
