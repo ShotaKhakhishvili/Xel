@@ -1,6 +1,7 @@
 package Compilation.SyntaxTree;
 
 import Compilation.*;
+import Exceptions.CompilationError;
 
 import static Compilation.CompType.VAR;
 
@@ -21,7 +22,7 @@ public class NodeEXP extends TreeNode {
     }
 
     @Override
-    public Variable evaluate(){
+    public Variable evaluate() throws CompilationError {
         CompType type = expType;
         if(Decoder.BIOP_Types.containsValue(type)){
 
@@ -34,7 +35,7 @@ public class NodeEXP extends TreeNode {
         String val = getValue();
 
         if(type == VAR)
-            val = getScopeMemory().getVariable(value).value.toString();
+            val = getScope().getVariable(value).value.toString();
 
         try {
             Long a = Long.parseLong(val);

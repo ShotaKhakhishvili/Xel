@@ -61,12 +61,6 @@ public class Decoder {
         put("%", 2);
     }};
 
-    private static final Map<String, BinaryOperator<Variable>> UOPs = new HashMap<>(){
-        {
-            put("-", Variable::sub);
-        }
-    };
-
     private static final Map<String,CompType> easyTypes = new HashMap<>(){
         {
             put("if", CompType.IF);
@@ -79,75 +73,37 @@ public class Decoder {
     };
 
     static CompType getGeneralType(String statement,String[] parts, Scope scope){
-//        parts = Functions.tokenize(statement).toArray(new String[0]);
-
-//        System.out.println(Arrays.toString(parts));
-
         if(easyTypes.containsKey(parts[0]))
             return easyTypes.get(parts[0]);
 
-        if(parts[0].charAt(0) == '{')
-            return CompType.SCOPE;
         if(varTypes.containsKey(parts[0])){
             if(statement.contains("="))
-                return CompType.INIT;
-            return CompType.DECL;
+                return INIT;
+            return DECL;
         }
         if(scope.getMemory().getFunctions().containsKey(parts[0]))
-            return CompType.FCALL;
-        if(scope.getMemory().containsVariable(parts[0]))
-            return CompType.ASGM;
+            return FCALL;
+        if(scope.containsVariable(parts[0]))
+            return ASGM;
 
-        return CompType.INVALID;
+        return INVALID;
     }
 
     static TreeNode DECL_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
-        String variables = String.join("", Arrays.copyOfRange(parts, 1, parts.length));
+        String variablesJoined = String.join("", Arrays.copyOfRange(parts, 1, parts.length));
 
         for(Character ch : invalidNameChars)
-            if(variables.contains(String.valueOf(ch)) && ch != ',')
+            if(variablesJoined.contains(String.valueOf(ch)) && ch != ',')
                 throw  new CompilationError(0);//CODE0
 
-        Set<String> tokens = new HashSet<>();
+        String[] variables = Functions.commaRemover(variablesJoined);
 
-        StringBuilder current = new StringBuilder();
-
-        for(Character ch : variables.toCharArray()){
-            if(ch == ','){
-                if(!current.isEmpty()){
-
-                    if(easyTypes.containsKey(current.toString()) || varTypes.containsKey(current.toString()))
-                        throw new CompilationError(2);//CODE2
-                    if(scope.getMemory().containsVariable(current.toString()) || tokens.contains(current.toString()))
-                        throw new CompilationError(1);//CODE1
-
-                    tokens.add(current.toString());
-                    current = new StringBuilder();
-                }
-            }
-            else{
-
-                if(current.isEmpty() && ch >= '0' && ch <= '9')
-                        throw new CompilationError(0);//CODE0
-                current.append(ch);
-
-            }
-        }
-
-        if(!current.isEmpty()){
-
-            if(easyTypes.containsKey(current.toString()) || varTypes.containsKey(current.toString()))
-                throw new CompilationError(2);//CODE2
-            if(scope.getMemory().containsVariable(current.toString()) || tokens.contains(current.toString()))
-                throw new CompilationError(1);//CODE1
-            tokens.add(current.toString());
-
-        }
-
-        for(String varName : tokens)
+        for(String varName : variables){
+            if(!invalidNameChars.contains(varName.charAt(0)) && !(varName.charAt(0) <= '9' && varName.charAt(0) >= '0'))
             scope.getMemory().declareVariable(varName, Variable.getDefaultValue(varTypes.get(parts[0])));
+        }
 
-        return new NodeDECL(varTypes.get(parts[0]), tokens.toArray(new String[0]), scope);
+        return new NodeDECL(varTypes.get(parts[0]), variables, scope);
     }
 
     static NodeEXP EXP_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
@@ -158,13 +114,7 @@ public class Decoder {
             }
         }
 
-        String joined = String.join(" ", Arrays.copyOfRange(parts, 0, parts.length));
-
-        String[] tokens = Functions.tokenize(joined).toArray(new String[0]);
-
-        System.out.println(Arrays.toString(tokens));
-
-        return EXP_checkSyntax(tokens, 0, tokens.length, scope);
+        return EXP_checkSyntax(parts, 0, parts.length, scope);
     }
 
     public static NodeEXP EXP_checkSyntax(String[] tokens,int l, int r, Scope scope) throws CompilationError {
@@ -180,7 +130,7 @@ public class Decoder {
                     return new NodeEXP(tokens[l], LIT, scope);
                 }
             }catch (NumberFormatException e){
-                if (scope.getMemory().containsVariable(tokens[l]))
+                if (scope.containsVariable(tokens[l]))
                     return new NodeEXP(tokens[l], VAR, scope);
                 throw new CompilationError(9);//CODE9
             }
@@ -266,7 +216,7 @@ public class Decoder {
     }
 
     static NodeASGM ASGM_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
-        if(!scope.getMemory().containsVariable(parts[0]))
+        if(!scope.containsVariable(parts[0]))
             throw new CompilationError(10);//CODE10
 
         if(parts.length < 2)
@@ -299,5 +249,6 @@ public class Decoder {
 
         return new NodeASGM(parts[0], asgmType, exp, scope);
     }
+
 }
 

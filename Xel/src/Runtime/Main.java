@@ -1,10 +1,12 @@
 package Runtime;
 
 import Compilation.Compiler;
+import Compilation.Scope;
 import Compilation.SyntaxTree.TreeNode;
 import Compilation.Variable;
 import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
+import Extra.Functions;
 import Extra.Parser;
 
 import java.security.KeyPair;
@@ -28,13 +30,6 @@ public class Main {
             System.out.println(GREEN + "Compilation Success!" + RESET);
 
             program.execute();
-
-            Map<String, Variable<Integer>> ints =  program.getScopeMemory().getInts();
-            Set<String> keyset = ints.keySet();
-            for(String key : keyset){
-                System.out.println(key + ": " + ints.get(key).value);
-            }
-
         }catch (CompilationError e){
             System.out.println(RED + "Compilation Error: " + e.getMessage() + RESET);
         }catch (RuntimeError e){

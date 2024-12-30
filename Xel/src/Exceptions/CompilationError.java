@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CompilationError extends Throwable {
-    private static final Map<Integer,String> errors = new HashMap<>(){{
+    public static final Map<Integer,String> errors = new HashMap<>(){{
         put(0,"Illegal Character On Declaration [Error Code 0]");
         put(1,"Duplicate Variable Declaration [Error Code 1]");
         put(2,"Illegal Variable Name Declaration [Error Code 2]");
@@ -16,6 +16,7 @@ public class CompilationError extends Throwable {
         put(10,"Assignment On Unknown Variable Detected [Error Code 10]");
         put(11,"Unfinished Assignment [Error Code 11]");
         put(12,"Unknown Assignment Operator [Error Code 12]");
+        put(13,"Illegal Scope Closing Detected [Error Code 13]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

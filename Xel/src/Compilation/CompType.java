@@ -2,7 +2,8 @@ package Compilation;
 
 public enum CompType {
     PROG,       // Program
-    SCOPE,      // Scope
+    SCOPES,     // Scope Start
+    SCOPEE,     // Scope End
 
     DECL,       // Declaration
     INIT,       // Initialization

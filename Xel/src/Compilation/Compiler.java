@@ -5,6 +5,10 @@ import Compilation.SyntaxTree.NodeEXP;
 import Compilation.SyntaxTree.TreeNode;
 import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
+import Extra.Functions;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static Compilation.CompType.*;
 
@@ -12,45 +16,62 @@ public class Compiler {
     public static TreeNode compile(String[] lines) throws CompilationError {
         int pc = 1;
 
-        Scope globalScope = new Scope();
-        Scope currentScope = globalScope;
+//        lines = Functions.tokenizeCurlyBraces(lines).toArray(new String[0]);
+//        lines = Functions.tokenizeParentheses(lines).toArray(new String[0]);
 
-        TreeNode program = new TreeNode(currentScope);
-
-        program.setScope(globalScope);
+        TreeNode currentProgram = new TreeNode(new Scope());
 
         for(String line : lines){
+            line = line.trim();
             if(line.isEmpty())continue;
+            if(line.equals("{")){
+                currentProgram = new TreeNode(currentProgram);
+                currentProgram.getParentNode().addChild(currentProgram);
+                pc++;
+                continue;
+            }
+            if(line.equals("}")){
+                if(currentProgram.getParentNode() == null)
+                    throw new CompilationError(CompilationError.errors.get(13), pc);
+                currentProgram.getScopeMemory().delete();
+                currentProgram = currentProgram.getParentNode();
+                pc++;
+                continue;
+            }
 
             String[] parts = line.split(" ");
 
             TreeNode newNode;
-            CompType type =  Decoder.getGeneralType(line, parts, currentScope);
+            CompType type =  Decoder.getGeneralType(line, parts, currentProgram.getScope());
             try {
-                newNode = evaluateNode(type, line, parts, currentScope);
+                newNode = evaluateNode(type, line, parts, currentProgram.getScope());
             }catch (CompilationError e){
                 throw new CompilationError(e.getMessage(), pc);
             }catch (RuntimeError e){
                 throw new RuntimeError(e.getMessage(), pc);
             }
 
-            newNode.setScope(currentScope);
-            program.addChild(newNode);
+            newNode.setScope(currentProgram.getScope());
+            newNode.setLine(pc);
+            currentProgram.addChild(newNode);
 
             pc++;
         }
 
-        return program;
+        currentProgram.getScopeMemory().delete();
+
+        return currentProgram;
     }
 
     private static TreeNode evaluateNode(CompType type, String line, String[] parts, Scope currentScope) throws CompilationError {
+        String[] tokens = Functions.assignmentTokenizer(line).toArray(new String[0]);
         switch (type){
             case DECL:
                 return Decoder.DECL_checkValidity(line, parts, currentScope);
             case ASGM:
-                return Decoder.ASGM_checkValidity(line, parts, currentScope);
+                return Decoder.ASGM_checkValidity(line, tokens, currentScope);
             case EXP :
-                return Decoder.EXP_checkValidity(line, parts, currentScope);
+                return Decoder.EXP_checkValidity(line, tokens, currentScope);
             default:
                 System.out.println("NOT IMPLEMENTED YET, SORRY");
                 return new TreeNode(currentScope);
@@ -73,7 +94,5 @@ public class Compiler {
         Decoder.ASGM_checkValidity(asg, asg.split(" "), scope);
 
         asgm.execute();
-
-        System.out.println("Value: " + memory.getVariable("ab").value);
     }
 }

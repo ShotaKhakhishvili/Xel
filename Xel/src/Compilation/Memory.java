@@ -1,9 +1,17 @@
 package Compilation;
 
+import Exceptions.CompilationError;
+
 import java.util.*;
+import java.util.concurrent.CompletionException;
 
 public class Memory {
     private Set<String> variables = new HashSet<>();
+    private Scope owner;
+
+    public Memory(Scope owner){
+        this.owner = owner;
+    }
 
     private final Map<String,Variable<Boolean>> bools = new HashMap<>();
     private final Map<String,Variable<Character>> chars = new HashMap<>();
@@ -15,13 +23,11 @@ public class Memory {
     private final Map<String,Variable<Double>> doubles = new HashMap<>();
     private final Map<String,Variable<String>> strings = new HashMap<>();
 
-    public Map<String, Variable<Integer>> getInts() {
-        return ints;
-    }
-
     private Map<String,Functions> functions = new HashMap<>();
 
-    public void declareVariable(String varName, Object varValue){
+    public void declareVariable(String varName, Object varValue) throws CompilationError {
+        if(owner.containsVariable(varName))
+            throw new CompilationError(1);//CODE1
         if(varValue instanceof  Boolean)
             bools.put(varName, new Variable<>((Boolean) varValue));
         if(varValue instanceof  Character)
@@ -40,10 +46,11 @@ public class Memory {
             doubles.put(varName, new Variable<>((Double) varValue));
         if(varValue instanceof  String)
             strings.put(varName, new Variable<>((String) varValue));
+
         variables.add(varName);
     }
 
-    public Variable getVariable(String varName){
+    public Variable getVariable(String varName) throws CompilationError {
         if(bools.containsKey(varName))
             return bools.get(varName);
         if(chars.containsKey(varName))
@@ -64,7 +71,7 @@ public class Memory {
         return strings.get(varName);
     }
 
-    public void setVariable(String varName, String value){
+    public void setVariable(String varName, String value) throws CompilationError {
         long longValue;
         double doubleValue = Double.parseDouble(value);
         if(value.contains("."))
@@ -91,11 +98,24 @@ public class Memory {
             strings.put(varName, new Variable<>(value));
     }
 
-    public boolean containsVariable(String varName){
-        return variables.contains(varName);
-    }
-
     public Map<String, Functions> getFunctions() {
         return functions;
+    }
+
+    public Set<String> getVariables() {
+        return variables;
+    }
+
+    public void delete(){
+        bools.clear();
+        chars.clear();
+        bytes.clear();
+        shorts.clear();
+        ints.clear();
+        longs.clear();
+        floats.clear();
+        doubles.clear();
+        strings.clear();
+        variables.clear();
     }
 }
