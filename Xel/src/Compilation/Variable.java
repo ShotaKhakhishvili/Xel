@@ -1,5 +1,7 @@
 package Compilation;
 
+import Exceptions.RuntimeError;
+
 import java.util.Arrays;
 
 import static Compilation.CompType.*;
@@ -83,7 +85,6 @@ public class Variable<T>{
         return castNumToAppropriate(getDoubleValue(this) / getDoubleValue(other), thisType, otherType);
     }
     public Variable mod(Variable other){
-        System.out.println(value + " " + other.value);
         CompType thisType = this.getVarType();
         CompType otherType = other.getVarType();
         

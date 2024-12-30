@@ -1,7 +1,11 @@
 package Compilation;
 
+import Compilation.SyntaxTree.NodeASGM;
+import Compilation.SyntaxTree.NodeDECL;
+import Compilation.SyntaxTree.NodeEXP;
+import Compilation.SyntaxTree.TreeNode;
+import Exceptions.CompilationError;
 import Extra.Functions;
-import Extra.Pair;
 
 import java.util.*;
 import java.util.function.BinaryOperator;
@@ -29,23 +33,23 @@ public class Decoder {
         }
     };
 
-    public static final Map<String, BinaryOperator<Variable>> BIOP_Functions = new HashMap<>(){
+    public static final Map<CompType, BinaryOperator<Variable>> BIOP_Functions = new HashMap<>(){
         {
-            put("+", Variable::add);
-            put("-", Variable::sub);
-            put("/", Variable::div);
-            put("*", Variable::mult);
-            put("%", Variable::mod);
+            put(ADD, Variable::add);
+            put(SUB, Variable::sub);
+            put(DIV, Variable::div);
+            put(MULT, Variable::mult);
+            put(MOD, Variable::mod);
         }
     };
-    private static final Map<String, CompType> BIOP_Types = new HashMap<>(){
+    public static final Map<String, CompType> BIOP_Types = new HashMap<>(){
         {
             put("+", ADD);
             put("-", SUB);
             put("/", DIV);
             put("*", MULT);
             put("%", MOD);
-            put("%^", POW);
+            put("^", POW);
             put("", INVALID);
         }
     };
@@ -75,6 +79,10 @@ public class Decoder {
     };
 
     static CompType getGeneralType(String statement,String[] parts, Scope scope){
+//        parts = Functions.tokenize(statement).toArray(new String[0]);
+
+//        System.out.println(Arrays.toString(parts));
+
         if(easyTypes.containsKey(parts[0]))
             return easyTypes.get(parts[0]);
 
@@ -93,12 +101,12 @@ public class Decoder {
         return CompType.INVALID;
     }
 
-    static TreeNode DECL_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError{
+    static TreeNode DECL_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
         String variables = String.join("", Arrays.copyOfRange(parts, 1, parts.length));
 
         for(Character ch : invalidNameChars)
             if(variables.contains(String.valueOf(ch)) && ch != ',')
-                throw  new CompilationError(0);
+                throw  new CompilationError(0);//CODE0
 
         Set<String> tokens = new HashSet<>();
 
@@ -109,9 +117,9 @@ public class Decoder {
                 if(!current.isEmpty()){
 
                     if(easyTypes.containsKey(current.toString()) || varTypes.containsKey(current.toString()))
-                        throw new CompilationError(2);
+                        throw new CompilationError(2);//CODE2
                     if(scope.getMemory().containsVariable(current.toString()) || tokens.contains(current.toString()))
-                        throw new CompilationError(1);
+                        throw new CompilationError(1);//CODE1
 
                     tokens.add(current.toString());
                     current = new StringBuilder();
@@ -120,7 +128,7 @@ public class Decoder {
             else{
 
                 if(current.isEmpty() && ch >= '0' && ch <= '9')
-                        throw new CompilationError(0);
+                        throw new CompilationError(0);//CODE0
                 current.append(ch);
 
             }
@@ -129,9 +137,9 @@ public class Decoder {
         if(!current.isEmpty()){
 
             if(easyTypes.containsKey(current.toString()) || varTypes.containsKey(current.toString()))
-                throw new CompilationError(2);
+                throw new CompilationError(2);//CODE2
             if(scope.getMemory().containsVariable(current.toString()) || tokens.contains(current.toString()))
-                throw new CompilationError(1);
+                throw new CompilationError(1);//CODE1
             tokens.add(current.toString());
 
         }
@@ -139,42 +147,54 @@ public class Decoder {
         for(String varName : tokens)
             scope.getMemory().declareVariable(varName, Variable.getDefaultValue(varTypes.get(parts[0])));
 
-        return new NodeDECL(varTypes.get(parts[0]), tokens.toArray(new String[0]));
+        return new NodeDECL(varTypes.get(parts[0]), tokens.toArray(new String[0]), scope);
     }
 
-    static NodeEXP EXP_checkValidity(String statement, String[] parts, Memory memory) throws CompilationError {
-
+    static NodeEXP EXP_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
         for(String part : parts){
             for(char ch : part.toCharArray()){
-                if(invalidNameChars.contains(ch) && !BIOP_Functions.containsKey(Character.toString(ch)) && ch != '(' && ch != ')' && ch != '.')
-                    throw new CompilationError(5);
+                if(invalidNameChars.contains(ch) && !BIOP_Types.containsKey(Character.toString(ch)) && ch != '(' && ch != ')' && ch != '.')
+                    throw new CompilationError(5);//CODE5
             }
         }
 
-        String joined = String.join("", Arrays.copyOfRange(parts, 0, parts.length));
+        String joined = String.join(" ", Arrays.copyOfRange(parts, 0, parts.length));
 
         String[] tokens = Functions.tokenize(joined).toArray(new String[0]);
 
-        return EXP_checkSyntax(tokens, 0, tokens.length, memory);
+        System.out.println(Arrays.toString(tokens));
+
+        return EXP_checkSyntax(tokens, 0, tokens.length, scope);
     }
 
-    public static NodeEXP EXP_checkSyntax(String[] tokens,int l, int r, Memory memory) throws CompilationError {
+    public static NodeEXP EXP_checkSyntax(String[] tokens,int l, int r, Scope scope) throws CompilationError {
         if(r - l == 0)
-            throw  new CompilationError(8);
+            throw  new CompilationError(8);//CODE8
         if(r - l == 1){
             try {
                 try {
                     Long.parseLong(String.valueOf(tokens[l]));
-                    return new NodeEXP(new String[]{tokens[l]}, LIT);
+                    return new NodeEXP(tokens[l], LIT, scope);
                 }catch (NumberFormatException e){
                     Double.parseDouble(String.valueOf(tokens[l]));
-                    return new NodeEXP(new String[]{tokens[l]}, LIT);
+                    return new NodeEXP(tokens[l], LIT, scope);
                 }
             }catch (NumberFormatException e){
-                if (memory.containsVariable(tokens[l]))
-                    return new NodeEXP(new String[]{tokens[l]}, VAR);
-                throw new CompilationError(9);
+                if (scope.getMemory().containsVariable(tokens[l]))
+                    return new NodeEXP(tokens[l], VAR, scope);
+                throw new CompilationError(9);//CODE9
             }
+        }
+        if(tokens[l].equals("-")){
+            String[] newSequence = new String[r-l+1];
+            newSequence[0] = "0";
+            for(int i = l; i < r; i++){
+                newSequence[i-l+1] = tokens[i];
+            }
+            return EXP_checkSyntax(newSequence,0,r-l+1,scope);
+        }
+        if(tokens[l].equals("+")){
+            return EXP_checkSyntax(tokens,l+1,r,scope);
         }
 
         NodeEXP left;
@@ -198,14 +218,16 @@ public class Decoder {
                     }while(i < r);
 
                     if(counter > 0)
-                        throw new CompilationError(6);
+                        throw new CompilationError(6);//CODE6
 
                     if(i == l && starting == r - 1) {
                         for(int a = l + 1, b = r - 2; a < b; a++,b--){
                             if(!(tokens[a].equals("(") && tokens[b].equals(")")))
-                                return EXP_checkSyntax(tokens,a, b+1, memory);
+                                return EXP_checkSyntax(tokens,a, b+1, scope);
                         }
                     }
+                    if(i == l + 1)
+                        throw new CompilationError(7);//CODE7
                 }
                 if(precedence.containsKey(tokens[i]) && precedence.get(tokens[i]) == j) {
                     high = i + 1;
@@ -221,19 +243,17 @@ public class Decoder {
                         tokens[high-1] = cntMinus % 2 == 0 ? "+" : "-";
                         i++;
                     }
-                    else if(i == r - 1)
-                        throw new CompilationError(7);
                     low = i;
                     break;
                 }
                 i--;
             }
 
-            if(high > 0){
-                left = EXP_checkSyntax(tokens, l, low,memory);
-                right = EXP_checkSyntax(tokens, high, r,memory);
+            if(high > l){
+                left = EXP_checkSyntax(tokens, l, low,scope);
+                right = EXP_checkSyntax(tokens, high, r,scope);
 
-                NodeEXP answer = new NodeEXP(new String[]{tokens[high-1]}, BIOP);
+                NodeEXP answer = new NodeEXP(tokens[high-1], BIOP_Types.get(tokens[high-1]), scope);
 
                 answer.getChildren().add(left);
                 answer.getChildren().add(right);
@@ -241,13 +261,43 @@ public class Decoder {
                 return answer;
             }
         }
-        return  null;
+
+        throw new CompilationError(11);//CODE11
     }
 
-    static String[] ASGM_checkValidity(String statement, String[] parts){
+    static NodeASGM ASGM_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
+        if(!scope.getMemory().containsVariable(parts[0]))
+            throw new CompilationError(10);//CODE10
 
+        if(parts.length < 2)
+            throw new CompilationError(11);//CODE11
 
-        return null;
+        CompType asgmType;
+        int cropped = 0;
+
+        if(parts[1].charAt(0) == '='){
+            asgmType = ASGM;
+            if(parts[1].length() > 1){
+                cropped = 1;
+                parts[1] = parts[1].substring(2);
+            }
+        }
+        else if(parts[1].length() > 1){
+            if(BIOP_Types.containsKey(String.valueOf(parts[1].charAt(0))) && parts[1].charAt(1) == '='){
+                asgmType = BIOP_Types.get(String.valueOf(parts[1].charAt(0)));
+                if(parts[1].length() > 2){
+                    cropped = 1;
+                    parts[1] = parts[1].substring(2);
+                }
+            }
+            else
+                throw new CompilationError(12);//CODE12
+        }else
+            throw new CompilationError(12);//CODE12
+
+        NodeEXP exp = EXP_checkValidity(statement, Arrays.copyOfRange(parts,2 - cropped, parts.length), scope);
+
+        return new NodeASGM(parts[0], asgmType, exp, scope);
     }
 }
 

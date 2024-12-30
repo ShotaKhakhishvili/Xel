@@ -24,13 +24,14 @@ public enum CompType {
     LUNOP,      // Logical Unary Operations     {!}
     LINOP,      // Logical Binary Operations    {&&, ||}
 
-    VTYPE,      // Any Variable Type
+
     BOOL,CHAR,BYTE,SHORT,INT,LONG,FLOAT,DOUBLE,STRING,    // Specific Variable Types
 
     LIT,        // Literal
     VAR,        // Variable
 
-    ADD,SUB,MULT,DIV,MOD,POW,
+    ADD,SUB,MULT,DIV,MOD,POW, // Used for expressions and for assignments
+    INC,DEC,    // Increment/Decrement fo assignments
 
     INVALID,
 }

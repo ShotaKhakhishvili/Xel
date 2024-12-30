@@ -1,12 +1,8 @@
-package Compilation;
+package Extra;
 
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.io.*;
 import java.util.List;
-import java.util.Scanner;
 
 
 /**

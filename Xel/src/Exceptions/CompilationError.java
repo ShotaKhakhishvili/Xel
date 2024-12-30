@@ -1,4 +1,4 @@
-package Compilation;
+package Exceptions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +13,9 @@ public class CompilationError extends Throwable {
         put(7,"Illegal Operation Sequence On Arithmetic Expression [Error Code 7]");
         put(8,"Not Enough Parameters On Arithmetic Expression [Error Code 8]");
         put(9,"Unknown Argument On Arithmetic Expression [Error Code 9]");
+        put(10,"Assignment On Unknown Variable Detected [Error Code 10]");
+        put(11,"Unfinished Assignment [Error Code 11]");
+        put(12,"Unknown Assignment Operator [Error Code 12]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

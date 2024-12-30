@@ -14,8 +14,8 @@ public interface Functions {
     }
     static List<String> tokenize(String expression) {
         // Replace various types of Unicode dashes/minus signs with a standard ASCII hyphen
-        expression = expression
-                .replaceAll("[−–—]", "-"); // This covers U+2212, U+2013, and U+2014
+        expression = expression.replaceAll("[−–—]", "-"); // covers U+2212, U+2013, U+2014
+
         List<String> tokens = new ArrayList<>();
 
         // Updated regex to include:
@@ -26,12 +26,15 @@ public interface Functions {
         String tokenPatterns = "\\d+\\.\\d+|\\d+|[a-zA-Z_][a-zA-Z0-9_]*|[()+\\-*/%^]";
         Pattern pattern = Pattern.compile(tokenPatterns);
 
-        // Remove whitespace, then match
-        Matcher matcher = pattern.matcher(expression.replaceAll("\\s+", ""));
+        // Instead of removing *all* whitespace, just do trim() if you want
+        expression = expression.trim();
+
+        Matcher matcher = pattern.matcher(expression);
         while (matcher.find()) {
             tokens.add(matcher.group());
         }
         return tokens;
     }
+
 
 }
