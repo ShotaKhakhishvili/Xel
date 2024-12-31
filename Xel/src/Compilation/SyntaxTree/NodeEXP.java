@@ -7,8 +7,8 @@ import Exceptions.RuntimeError;
 import static Compilation.CompType.*;
 
 public class NodeEXP extends TreeNode {
-    CompType expType;
-    String value;
+    private final CompType expType;
+    private final String value;
 
     public NodeEXP(String value, CompType expType, TreeNode parentNode) {
         super(parentNode);
@@ -43,7 +43,6 @@ public class NodeEXP extends TreeNode {
         }
 
         String val = getValue();
-
 
         if(type == VAR)
             val = getScope().getVariable(value).value.toString();

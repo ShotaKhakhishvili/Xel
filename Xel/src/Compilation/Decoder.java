@@ -1,11 +1,9 @@
 package Compilation;
 
-import Compilation.SyntaxTree.NodeASGM;
-import Compilation.SyntaxTree.NodeDECL;
-import Compilation.SyntaxTree.NodeEXP;
-import Compilation.SyntaxTree.TreeNode;
+import Compilation.SyntaxTree.*;
 import Exceptions.CompilationError;
 import Extra.Functions;
+import com.sun.source.tree.Tree;
 
 import java.util.*;
 import java.util.function.BinaryOperator;
@@ -103,46 +101,57 @@ public class Decoder {
             put("while", WHILE);
             put("for", FOR);
             put("func", FDEC);
+            put("print", PRINT);
+            put("input", INPUT);
         }
     };
 
-    static CompType getGeneralType(String[] parts, TreeNode parentNode){
-        if(scopedInstructions.containsKey(parts[0]))
-            return scopedInstructions.get(parts[0]);
+    static CompType getGeneralType(String[] tokens, TreeNode parentNode){
+        if(scopedInstructions.containsKey(tokens[0]))
+            return scopedInstructions.get(tokens[0]);
 
-        if(parts[0].equals("{"))
+        if(tokens[0].equals("{"))
             return SCOPES;
-        if(parts[0].equals("}"))
+        if(tokens[0].equals("}"))
             return SCOPEE;
 
-        if(varTypes.containsKey(parts[0])){
-            if(Arrays.stream(parts).toList().contains("="))
-                return INIT;
+        if(varTypes.containsKey(tokens[0]))
             return DECL;
-        }
-        if(parentNode.getScope().getMemory().getFunctions().containsKey(parts[0]))
+        if(parentNode.getScope().getMemory().getFunctions().containsKey(tokens[0]))
             return FCALL;
-        if(parentNode.getScope().containsVariable(parts[0]))
+        if(parentNode.getScope().containsVariable(tokens[0]))
             return ASGM;
 
         return INVALID;
     }
 
-    static TreeNode DECL_checkValidity(String[] parts, TreeNode parentNode) throws CompilationError {
-        String variablesJoined = String.join("", Arrays.copyOfRange(parts, 1, parts.length));
+    static TreeNode DECL_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+        String variablesJoined = String.join("", Arrays.copyOfRange(tokens, 1, tokens.length));
 
-        for(Character ch : invalidNameChars)
-            if(variablesJoined.contains(String.valueOf(ch)) && ch != ',')
-                throw  new CompilationError(0);//CODE0
+        String[][] declarations = Functions.declarationSeperator(Arrays.copyOfRange(tokens,1,tokens.length));
+        String[] variables = new String[declarations.length];
+        NodeEXP[] initExps = new NodeEXP[declarations.length];
+        CompType varType = varTypes.get(tokens[0]);
 
-        String[] variables = Functions.commaRemover(variablesJoined);
+        for(int i = 0; i < declarations.length; i++){
+            String[] declaration = declarations[i];
+            variables[i] = declaration[0];
 
-        for(String varName : variables){
-            if(!invalidNameChars.contains(varName.charAt(0)) && !(varName.charAt(0) <= '9' && varName.charAt(0) >= '0'))
-                parentNode.getScopeMemory().declareVariable(varName, Variable.getDefaultValue(varTypes.get(parts[0])));
+            if(!invalidNameChars.contains(declaration[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0'))
+                parentNode.getScopeMemory().declareVariable(declaration[0], Variable.getDefaultValue(varType), varType);
+
+            if(declaration.length == 1)// Declaration without initialization
+                initExps[i] = new NodeEXP(Variable.getDefaultValue(varType).toString(), LIT, parentNode);
+            else{
+                if(declaration[1].equals("=") && declaration.length == 2)
+                    throw new CompilationError(20);
+                if(!declaration[1].equals("="))
+                    throw new CompilationError(19);
+                initExps[i] = EXP_checkValidity(Arrays.copyOfRange(declaration,2,declaration.length),parentNode);
+            }
         }
 
-        return new NodeDECL(varTypes.get(parts[0]), variables, parentNode);
+        return new NodeDECL(varTypes.get(tokens[0]), initExps, variables, parentNode);
     }
 
     static NodeEXP EXP_checkValidity( String[] parts, TreeNode parentNode) throws CompilationError {
@@ -180,17 +189,12 @@ public class Decoder {
                         if(counter == 0)
                             break;
                         i--;
-                    }while(i < r);
+                    }while(i >= l);
 
-                    if(counter > 0)
+                    if(counter < 0)
                         throw new CompilationError(6);//CODE6
-
-                    if(i == l && starting == r - 1) {
-                        for(int a = l + 1, b = r - 2; a < b; a++,b--){
-                            if(!(tokens[a].equals("(") && tokens[b].equals(")")))
-                                return EXP_checkSyntax(tokens,a, b+1, parentNode);
-                        }
-                    }
+                    if(i == l && starting == r - 1)
+                        return EXP_checkSyntax(tokens,l+1,r-1,parentNode);
                     if(i == l + 1)
                         throw new CompilationError(7);//CODE7
                 }
@@ -274,29 +278,46 @@ public class Decoder {
         return null;
     }
 
-    static NodeASGM ASGM_checkValidity(String[] parts, TreeNode parentNode) throws CompilationError {
-        if(!parentNode.getScope().containsVariable(parts[0]))
+    static NodeASGM ASGM_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+        if(!parentNode.getScope().containsVariable(tokens[0]))
             throw new CompilationError(10);//CODE10
 
-        if(parts.length < 2)
+        if(tokens.length < 2)
             throw new CompilationError(11);//CODE11
 
         CompType asgm;
+        NodeEXP exp = null;
 
-        if(parts[1].equals("="))
+        if(tokens[1].equals("="))
             asgm = ASGM;
-        else if(OP_Types.containsKey(String.valueOf(parts[1].charAt(0)))){
-            if(parts[1].length() == 2 && parts[1].charAt(1) == '=')
-                asgm = OP_Types.get(String.valueOf(parts[1].charAt(0)));
+        else if(tokens[1].equals("++")){
+            if(tokens.length > 2)
+                throw new CompilationError(17);
+            asgm = ASGM;
+            tokens = new String[]{tokens[0],"=",tokens[0],"+","1"};
+        }
+        else if(tokens[1].equals("--")){
+            if(tokens.length > 2)
+                throw new CompilationError(18);
+            asgm = ASGM;
+            tokens = new String[]{tokens[0],"=",tokens[0],"-","1"};
+        }
+        else if(OP_Types.containsKey(String.valueOf(tokens[1].charAt(0)))){
+            if(tokens[1].length() == 2 && tokens[1].charAt(1) == '=')
+                asgm = OP_Types.get(String.valueOf(tokens[1].charAt(0)));
             else
                 throw new CompilationError(12);//CODE12
         }
         else
             throw new CompilationError(12);//CODE12
 
-        NodeEXP exp = EXP_checkValidity(Arrays.copyOfRange(parts,2, parts.length), parentNode);
+        exp = EXP_checkValidity(Arrays.copyOfRange(tokens,2, tokens.length), parentNode);
 
-        return new NodeASGM(parts[0], asgm, exp, parentNode);
+        return new NodeASGM(tokens[0], asgm, exp, parentNode);
+    }
+
+    static NodePRINT PRINT_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+        return new NodePRINT(EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode),parentNode);
     }
 }
 

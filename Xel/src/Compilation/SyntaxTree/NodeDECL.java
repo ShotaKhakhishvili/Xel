@@ -5,19 +5,21 @@ import Compilation.Variable;
 import Exceptions.CompilationError;
 
 public class NodeDECL extends TreeNode {
-    CompType varType;
-    String[] varNames;
+    private final CompType varType;
+    private final NodeEXP[] varInits;
+    private final String[] varNames;
 
-    public NodeDECL(CompType varType, String[] varNames, TreeNode parentNode) {
+    public NodeDECL(CompType varType, NodeEXP[] varInits, String[] varNames, TreeNode parentNode) {
         super(parentNode);
-        this.varNames = varNames;
+        this.varInits = varInits;
         this.varType = varType;
+        this.varNames = varNames;
     }
 
     @Override
     public void execute() throws CompilationError {
-        for(String varName : varNames){
-            getScopeMemory().declareVariable(varName, Variable.getDefaultValue(varType));
+        for(int i = 0; i < varInits.length; i++){
+            getScopeMemory().declareVariable(varNames[i], varInits[i].evaluate().value, varType);
         }
     }
 }

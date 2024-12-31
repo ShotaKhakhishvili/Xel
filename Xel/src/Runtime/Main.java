@@ -4,6 +4,7 @@ import Compilation.Compiler;
 import Compilation.LinesToInstructions;
 import Compilation.Scope;
 import Compilation.SyntaxTree.NodeDECL;
+import Compilation.SyntaxTree.NodePRINT;
 import Compilation.SyntaxTree.TreeNode;
 import Compilation.Variable;
 import Exceptions.CompilationError;
@@ -20,6 +21,7 @@ import java.util.Set;
 
 import static Compilation.CompType.*;
 import static Compilation.Decoder.BIOP_Functions;
+import static Compilation.Decoder.EXP_checkSyntax;
 
 public class Main {
     public static void main(String[] args) throws CompilationError {
@@ -28,10 +30,10 @@ public class Main {
         parser.readFile();
         Pair<String[],Integer>[] instructions = LinesToInstructions.getInstructions(parser.getLines());
 
-        for(Pair<String[],Integer> pair : instructions){
-            String instruction = Arrays.toString(pair.getFirst());
-            System.out.println(instruction);
-        }
+//        for(Pair<String[],Integer> pair : instructions){
+//            String instruction = Arrays.toString(pair.getFirst());
+//            System.out.println("Line " + pair.getSecond() + ": " + instruction);
+//        }
 
         // ANSI escape code for red text
         final String RED = "\033[0;31m";
@@ -43,14 +45,7 @@ public class Main {
         try{
             TreeNode program = Compiler.compile(instructions);
             System.out.println(GREEN + "Compilation Success!" + RESET);
-
             program.execute();
-
-            System.out.println("a: " + program.getScopeMemory().getVariable("a").value.toString());
-            System.out.println("b: " + program.getScopeMemory().getVariable("b").value.toString());
-            System.out.println("c: " + program.getScopeMemory().getVariable("c").value.toString());
-            System.out.println("d: " + program.getScopeMemory().getVariable("d").value.toString());
-
         }catch (CompilationError e){
             System.out.println(RED + "Compilation Error: " + e.getMessage() + RESET);
         }catch (RuntimeError e){

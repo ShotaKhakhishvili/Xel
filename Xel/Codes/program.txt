@@ -1,6 +1,6 @@
-bool a,c
-float b,d
-a = jaybe
-c = !true
-d = ((15 + 18) % 3) + (13 / 4) * 3 + 2
-b = (d % 2) && (!a || c - 1) + 15
+bool a = true,c
+print a
+float b,d = 14,g = 18
+{
+print (d + g) / 2; print ((d + g) / 2) ^ 3
+}

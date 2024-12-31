@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class CompilationError extends Throwable {
     public static final Map<Integer,String> errors = new HashMap<>(){{
+        put(404,"Invalid Instruction [Error Code 404]");
         put(0,"Illegal Character On Declaration [Error Code 0]");
         put(1,"Duplicate Variable Declaration [Error Code 1]");
         put(2,"Illegal Variable Name Declaration [Error Code 2]");
@@ -20,7 +21,10 @@ public class CompilationError extends Throwable {
         put(14,"Illegal Expression. Can't Pow Operation On Strings [Error Code 14]");
         put(15,"Illegal Expression. Can't Apply Binary Operations On Strings [Error Code 15]");
         put(16,"Invalid Boolean Expression [Error Code 16]");
-        put(404,"Invalid Instruction [Error Code 404]");
+        put(17,"Extra Symbols On An Increment Operation [Error Code 17]");
+        put(18,"Extra Symbols On A Decrement Operation [Error Code 18]");
+        put(19,"Illegal Declaration [Error Code 19]");
+        put(20,"Unfinished Initialization [Error Code 20]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

@@ -25,28 +25,21 @@ public class Memory {
 
     private Map<String,Functions> functions = new HashMap<>();
 
-    public void declareVariable(String varName, Object varValue) throws CompilationError {
+    public void declareVariable(String varName, Object varValue, CompType varType) throws CompilationError {
         if(owner.containsVariable(varName))
             throw new CompilationError(1);//CODE1
-        if(varValue instanceof  Boolean)
-            bools.put(varName, new Variable<>((Boolean) varValue));
-        if(varValue instanceof  Character)
-            chars.put(varName, new Variable<>((Character) varValue));
-        if(varValue instanceof  Byte)
-            bytes.put(varName, new Variable<>((Byte) varValue));
-        if(varValue instanceof  Short)
-            shorts.put(varName, new Variable<>((Short) varValue));
-        if(varValue instanceof  Integer)
-            ints.put(varName, new Variable<>((Integer) varValue));
-        if(varValue instanceof  Long)
-            longs.put(varName, new Variable<>((Long) varValue));
-        if(varValue instanceof  Float)
-            floats.put(varName, new Variable<>((Float) varValue));
-        if(varValue instanceof  Double)
-            doubles.put(varName, new Variable<>((Double) varValue));
-        if(varValue instanceof  String)
-            strings.put(varName, new Variable<>((String) varValue));
-
+        switch (varType){
+            case BOOL -> bools.put(varName, null);
+            case CHAR -> chars.put(varName, null);
+            case BYTE -> bytes.put(varName, null);
+            case SHORT -> shorts.put(varName, null);
+            case INT -> ints.put(varName, null);
+            case LONG -> longs.put(varName, null);
+            case FLOAT -> floats.put(varName, null);
+            case DOUBLE -> doubles.put(varName, null);
+            default -> strings.put(varName, null);
+        }
+        setVariable(varName, varValue.toString());
         variables.add(varName);
     }
 
@@ -74,16 +67,18 @@ public class Memory {
     public void setVariable(String varName, String value) {
         long longValue;
         double doubleValue = 0;
+
         if(value.equals("true") || value.equals("false")){
             longValue = value.equals("true") ? 1L : 0L;
             doubleValue = value.equals("true") ? 1.0 : 0.0;
-        }
-        else if(value.contains(".") || value.contains("f") || value.contains("F"))
-            longValue = Long.parseLong(String.valueOf((long)Double.parseDouble(value)));
-        else{
+        }else{
+            if(value.contains(".") || value.contains("f") || value.contains("F"))
+                longValue = Long.parseLong(String.valueOf((long)Double.parseDouble(value)));
+            else
+                longValue = Long.parseLong(value);
             doubleValue = Double.parseDouble(value);
-            longValue = Long.parseLong(value);
         }
+
         if(bools.containsKey(varName))
             bools.put(varName, new Variable<>(longValue != 0));
         else if(chars.containsKey(varName))

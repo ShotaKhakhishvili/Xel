@@ -29,7 +29,9 @@ public class Compiler {
             }
             else if(type == SCOPES){
                 programsCreated++;
-                currentProgram = new TreeNode(currentProgram, new Scope(currentProgram.getScope()));
+                TreeNode newNode = new TreeNode(currentProgram, new Scope(currentProgram.getScope()));
+                currentProgram.addChild(newNode);
+                currentProgram = newNode;
                 continue;
             }
 
@@ -57,6 +59,7 @@ public class Compiler {
             case DECL -> DECL_checkValidity(instruction, parentNode);
             case ASGM -> Decoder.ASGM_checkValidity(instruction, parentNode);
             case EXP -> Decoder.EXP_checkValidity(instruction, parentNode);
+            case PRINT -> Decoder.PRINT_checkValidity(instruction, parentNode);
             default -> throw new CompilationError(404);
         };
     }

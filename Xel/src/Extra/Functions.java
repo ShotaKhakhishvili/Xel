@@ -135,4 +135,21 @@ public interface Functions {
 
         return tokens;
     }
+
+    static String[][] declarationSeperator(String[] tokens){
+        List<List<String>> list = new ArrayList<>();
+        list.add(new ArrayList<>());
+
+        for(String token : tokens){
+            if(token.equals(",")){
+                if(!list.get(list.size() - 1).isEmpty())
+                    list.add(new ArrayList<>());
+            }
+            else
+                list.get(list.size()-1).add(token);
+        }
+        if(list.get(list.size()-1).isEmpty())
+            list.remove(list.size()-1);
+        return list.stream().map(l -> l.toArray(new String[0])).toArray(String[][]::new);
+    }
 }

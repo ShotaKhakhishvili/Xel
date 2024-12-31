@@ -6,8 +6,9 @@ public enum CompType {
     SCOPEE,     // Scope End
 
     DECL,       // Declaration
-    INIT,       // Initialization
     ASGM,       // Assignment
+    PRINT,      // Print
+    INPUT,      // Input
     IF,         // If
     ELSE,       // Else
     ELIF,       // Else If

@@ -27,13 +27,14 @@ public class TreeNode {
         this.scope = parentNode.getScope();
     }
 
+    // Used for new scope starts, but can be used as usual also
     public TreeNode(TreeNode parentNode, Scope scope){
         this();
         this.parentNode = parentNode;
         this.scope = scope;
     }
 
-
+    // For the main program node
     public TreeNode(Scope scope){
         this();
         this.scope = scope;

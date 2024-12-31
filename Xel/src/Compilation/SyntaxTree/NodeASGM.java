@@ -10,9 +10,9 @@ import static Compilation.CompType.*;
 import static Compilation.Decoder.BIOP_Functions;
 
 public class NodeASGM extends TreeNode {
-    CompType type;
-    String varName;
-    NodeEXP exp;
+    private final CompType type;
+    private final String varName;
+    private final NodeEXP exp;
 
     public NodeASGM(String varName, CompType asgmType, NodeEXP exp, TreeNode parentNode) {
         super(parentNode);
