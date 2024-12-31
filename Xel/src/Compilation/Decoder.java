@@ -61,35 +61,40 @@ public class Decoder {
         put("%", 2);
     }};
 
-    private static final Map<String,CompType> easyTypes = new HashMap<>(){
+    static final Map<String,CompType> scopedInstructions = new HashMap<>(){
         {
-            put("if", CompType.IF);
-            put("elif", CompType.ELIF);
-            put("else", CompType.ELSE);
-            put("while", CompType.WHILE);
-            put("for", CompType.FOR);
-            put("func", CompType.FDEC);
+            put("if", IF);
+            put("elif", ELIF);
+            put("else", ELSE);
+            put("while", WHILE);
+            put("for", FOR);
+            put("func", FDEC);
         }
     };
 
-    static CompType getGeneralType(String statement,String[] parts, Scope scope){
-        if(easyTypes.containsKey(parts[0]))
-            return easyTypes.get(parts[0]);
+    static CompType getGeneralType(String[] parts, TreeNode parentNode){
+        if(scopedInstructions.containsKey(parts[0]))
+            return scopedInstructions.get(parts[0]);
+
+        if(parts[0].equals("{"))
+            return SCOPES;
+        if(parts[0].equals("}"))
+            return SCOPEE;
 
         if(varTypes.containsKey(parts[0])){
-            if(statement.contains("="))
+            if(Arrays.stream(parts).toList().contains("="))
                 return INIT;
             return DECL;
         }
-        if(scope.getMemory().getFunctions().containsKey(parts[0]))
+        if(parentNode.getScope().getMemory().getFunctions().containsKey(parts[0]))
             return FCALL;
-        if(scope.containsVariable(parts[0]))
+        if(parentNode.getScope().containsVariable(parts[0]))
             return ASGM;
 
         return INVALID;
     }
 
-    static TreeNode DECL_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
+    static TreeNode DECL_checkValidity(String[] parts, TreeNode parentNode) throws CompilationError {
         String variablesJoined = String.join("", Arrays.copyOfRange(parts, 1, parts.length));
 
         for(Character ch : invalidNameChars)
@@ -100,13 +105,13 @@ public class Decoder {
 
         for(String varName : variables){
             if(!invalidNameChars.contains(varName.charAt(0)) && !(varName.charAt(0) <= '9' && varName.charAt(0) >= '0'))
-            scope.getMemory().declareVariable(varName, Variable.getDefaultValue(varTypes.get(parts[0])));
+                parentNode.getScopeMemory().declareVariable(varName, Variable.getDefaultValue(varTypes.get(parts[0])));
         }
 
-        return new NodeDECL(varTypes.get(parts[0]), variables, scope);
+        return new NodeDECL(varTypes.get(parts[0]), variables, parentNode);
     }
 
-    static NodeEXP EXP_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
+    static NodeEXP EXP_checkValidity( String[] parts, TreeNode parentNode) throws CompilationError {
         for(String part : parts){
             for(char ch : part.toCharArray()){
                 if(invalidNameChars.contains(ch) && !BIOP_Types.containsKey(Character.toString(ch)) && ch != '(' && ch != ')' && ch != '.')
@@ -114,24 +119,24 @@ public class Decoder {
             }
         }
 
-        return EXP_checkSyntax(parts, 0, parts.length, scope);
+        return EXP_checkSyntax(parts, 0, parts.length, parentNode);
     }
 
-    public static NodeEXP EXP_checkSyntax(String[] tokens,int l, int r, Scope scope) throws CompilationError {
+    public static NodeEXP EXP_checkSyntax(String[] tokens,int l, int r, TreeNode parentNode) throws CompilationError {
         if(r - l == 0)
             throw  new CompilationError(8);//CODE8
         if(r - l == 1){
             try {
                 try {
                     Long.parseLong(String.valueOf(tokens[l]));
-                    return new NodeEXP(tokens[l], LIT, scope);
+                    return new NodeEXP(tokens[l], LIT, parentNode);
                 }catch (NumberFormatException e){
                     Double.parseDouble(String.valueOf(tokens[l]));
-                    return new NodeEXP(tokens[l], LIT, scope);
+                    return new NodeEXP(tokens[l], LIT, parentNode);
                 }
             }catch (NumberFormatException e){
-                if (scope.containsVariable(tokens[l]))
-                    return new NodeEXP(tokens[l], VAR, scope);
+                if (parentNode.getScope().containsVariable(tokens[l]))
+                    return new NodeEXP(tokens[l], VAR, parentNode);
                 throw new CompilationError(9);//CODE9
             }
         }
@@ -141,16 +146,16 @@ public class Decoder {
             for(int i = l; i < r; i++){
                 newSequence[i-l+1] = tokens[i];
             }
-            return EXP_checkSyntax(newSequence,0,r-l+1,scope);
+            return EXP_checkSyntax(newSequence,0,r-l+1, parentNode);
         }
         if(tokens[l].equals("+")){
-            return EXP_checkSyntax(tokens,l+1,r,scope);
+            return EXP_checkSyntax(tokens,l+1,r, parentNode);
         }
 
         NodeEXP left;
         NodeEXP right;
 
-        for(int j = 1; j <= 3; j++){
+        for(int j = 1; j <= 2; j++){
             int i = r - 1;
             int low = -1, high = -1;
             while(i > l){
@@ -173,7 +178,7 @@ public class Decoder {
                     if(i == l && starting == r - 1) {
                         for(int a = l + 1, b = r - 2; a < b; a++,b--){
                             if(!(tokens[a].equals("(") && tokens[b].equals(")")))
-                                return EXP_checkSyntax(tokens,a, b+1, scope);
+                                return EXP_checkSyntax(tokens,a, b+1, parentNode);
                         }
                     }
                     if(i == l + 1)
@@ -200,10 +205,10 @@ public class Decoder {
             }
 
             if(high > l){
-                left = EXP_checkSyntax(tokens, l, low,scope);
-                right = EXP_checkSyntax(tokens, high, r,scope);
+                left = EXP_checkSyntax(tokens, l, low, parentNode);
+                right = EXP_checkSyntax(tokens, high, r, parentNode);
 
-                NodeEXP answer = new NodeEXP(tokens[high-1], BIOP_Types.get(tokens[high-1]), scope);
+                NodeEXP answer = new NodeEXP(tokens[high-1], BIOP_Types.get(tokens[high-1]), parentNode);
 
                 answer.getChildren().add(left);
                 answer.getChildren().add(right);
@@ -215,40 +220,29 @@ public class Decoder {
         throw new CompilationError(11);//CODE11
     }
 
-    static NodeASGM ASGM_checkValidity(String statement, String[] parts, Scope scope) throws CompilationError {
-        if(!scope.containsVariable(parts[0]))
+    static NodeASGM ASGM_checkValidity(String[] parts, TreeNode parentNode) throws CompilationError {
+        if(!parentNode.getScope().containsVariable(parts[0]))
             throw new CompilationError(10);//CODE10
 
         if(parts.length < 2)
             throw new CompilationError(11);//CODE11
 
         CompType asgmType;
-        int cropped = 0;
 
-        if(parts[1].charAt(0) == '='){
+        if(parts[1].equals("="))
             asgmType = ASGM;
-            if(parts[1].length() > 1){
-                cropped = 1;
-                parts[1] = parts[1].substring(2);
-            }
-        }
-        else if(parts[1].length() > 1){
-            if(BIOP_Types.containsKey(String.valueOf(parts[1].charAt(0))) && parts[1].charAt(1) == '='){
+        else if(BIOP_Types.containsKey(String.valueOf(parts[1].charAt(0)))){
+            if(parts[1].length() == 2 && parts[1].charAt(1) == '=')
                 asgmType = BIOP_Types.get(String.valueOf(parts[1].charAt(0)));
-                if(parts[1].length() > 2){
-                    cropped = 1;
-                    parts[1] = parts[1].substring(2);
-                }
-            }
             else
                 throw new CompilationError(12);//CODE12
-        }else
+        }
+        else
             throw new CompilationError(12);//CODE12
 
-        NodeEXP exp = EXP_checkValidity(statement, Arrays.copyOfRange(parts,2 - cropped, parts.length), scope);
+        NodeEXP exp = EXP_checkValidity(Arrays.copyOfRange(parts,2, parts.length), parentNode);
 
-        return new NodeASGM(parts[0], asgmType, exp, scope);
+        return new NodeASGM(parts[0], asgmType, exp, parentNode);
     }
-
 }
 

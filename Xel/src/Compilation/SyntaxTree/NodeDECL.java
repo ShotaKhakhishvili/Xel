@@ -1,7 +1,6 @@
 package Compilation.SyntaxTree;
 
 import Compilation.CompType;
-import Compilation.Scope;
 import Compilation.Variable;
 import Exceptions.CompilationError;
 
@@ -9,8 +8,8 @@ public class NodeDECL extends TreeNode {
     CompType varType;
     String[] varNames;
 
-    public NodeDECL(CompType varType, String[] varNames, Scope scope) {
-        super(scope);
+    public NodeDECL(CompType varType, String[] varNames, TreeNode parentNode) {
+        super(parentNode);
         this.varNames = varNames;
         this.varType = varType;
     }

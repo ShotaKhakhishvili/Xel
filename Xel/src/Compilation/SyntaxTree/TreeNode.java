@@ -1,5 +1,6 @@
 package Compilation.SyntaxTree;
 
+import Compilation.CompType;
 import Compilation.Memory;
 import Compilation.Scope;
 import Exceptions.CompilationError;
@@ -8,33 +9,33 @@ import Exceptions.RuntimeError;
 import java.util.ArrayList;
 import java.util.List;
 
+import static Compilation.CompType.*;
+
 public class TreeNode {
     private List<TreeNode> children = new ArrayList<>();
     private Scope scope;
     private TreeNode parentNode;
     private int line;
 
+    // For default child/parent inheritance
     public TreeNode(TreeNode parentNode){
         this.parentNode = parentNode;
-        this.scope = new Scope(parentNode.scope);
+        this.scope = parentNode.getScope();
     }
 
-    public TreeNode getParentNode() {
-        return parentNode;
+    public TreeNode(TreeNode parentNode, Scope scope){
+        this.parentNode = parentNode;
+        this.scope = scope;
     }
+
 
     public TreeNode(Scope scope){
         this.scope = scope;
     }
 
-    public int getLine() {
-        return line;
+    public TreeNode getParentNode() {
+        return parentNode;
     }
-
-    public void setLine(int line) {
-        this.line = line;
-    }
-
 
     public Scope getScope() {
         return scope;
@@ -56,7 +57,15 @@ public class TreeNode {
         children.add(newNode);
     }
 
+    public int getLine(){
+        return this.line;
+    }
+    public void getLine(int line){
+        this.line = line;
+    }
+
     public void execute() throws CompilationError {
+        scope.getMemory().delete();
         for(TreeNode child : getChildren()){
             try {
                 child.execute();

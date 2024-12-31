@@ -1,115 +1,124 @@
 package Extra;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 public interface Functions {
-    static int charFrequency(char[] chars, char target){
-        int frequency = 0;
-        for(char ch : chars)
-            if(target == ch) frequency++;
-        return frequency;
-    }
-    static List<String> expressionTokenizer(String expression) {
-        // Replace various types of Unicode dashes/minus signs with a standard ASCII hyphen
-        expression = expression.replaceAll("[−–—]", "-"); // covers U+2212, U+2013, U+2014
+    // Define known multi-character operators (extend as needed)
+    Set<String> MULTI_CHAR_OPERATORS = new HashSet<>(Arrays.asList(
+            "&&", "||", "++", "--", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">=", "<="
+    ));
 
-        List<String> tokens = new ArrayList<>();
+    // Define known single-character operators/punctuation (extend as needed)
+    Set<Character> SINGLE_CHAR_TOKENS = new HashSet<>(Arrays.asList(
+            '+', '-', '*', '/', '%', '=', '<', '>', '!', '&', '|', '^', '~',
+            '(', ')', '{', '}', '[', ']', ';', ',', ':', '.', '?'
+    ));
 
-        // Updated regex to include:
-        //   1) floating-point numbers (\d+\.\d+)
-        //   2) integers (\d+)
-        //   3) variables (start with letter or underscore, continue with letters, digits, underscores)
-        //   4) arithmetic operators and parentheses ([()+\-*/%^])
-        String tokenPatterns = "\\d+\\.\\d+|\\d+|[a-zA-Z_][a-zA-Z0-9_]*|[()+\\-*/%^]";
-        Pattern pattern = Pattern.compile(tokenPatterns);
-
-        // Instead of removing *all* whitespace, just do trim() if you want
-        expression = expression.trim();
-
-        Matcher matcher = pattern.matcher(expression);
-        while (matcher.find()) {
-            tokens.add(matcher.group());
-        }
-        return tokens;
+    private static boolean isAlphaNumericOrUnderscore(char c) {
+        return Character.isLetterOrDigit(c) || c == '_';
     }
 
-    public static List<String> assignmentTokenizer(String expression) {
-        // Replace possible Unicode dashes with ASCII hyphen
-        expression = expression.replaceAll("[−–—]", "-");
-
-        // Regex pattern covering:
-        //   1) Assignment operators: +=, -=, *=, /=, %=, or single '='
-        //   2) Floating-point numbers:   \d+\.\d+
-        //   3) Integers:                \d+
-        //   4) Variables:               [a-zA-Z_][a-zA-Z0-9_]*
-        //   5) Arithmetic and parens:   [+\-*/%^()]
-        String tokenPatterns =
-                "\\+=|-=|\\*=|/=|%=|=" +         // assignment operators
-                        "|\\d+\\.\\d+" +                // floating-point numbers
-                        "|\\d+" +                       // integers
-                        "|[a-zA-Z_][a-zA-Z0-9_]*" +     // variables
-                        "|[+\\-*/%^()]"                 // arithmetic ops and parentheses
-                ;
-
-        Pattern pattern = Pattern.compile(tokenPatterns);
-        Matcher matcher = pattern.matcher(expression);
-
-        List<String> tokens = new ArrayList<>();
-        while (matcher.find()) {
-            // Add the matched token to the list
-            tokens.add(matcher.group());
-        }
-
-        return tokens;
+    // Identify if the character can start an identifier (letter or underscore)
+    private static boolean isIdentifierStart(char c) {
+        return Character.isLetter(c) || c == '_';
     }
 
-    public static List<String> tokenizeCurlyBraces(String[] lines) {
+    // Identify if the character can be in the body of an identifier (letter, digit, or underscore)
+    private static boolean isIdentifierBody(char c) {
+        return Character.isLetterOrDigit(c) || c == '_';
+    }
+
+    // Check if a character might start a numeric literal (digit or '.')
+    private static boolean isNumberStart(char c) {
+        return Character.isDigit(c) || c == '.';
+    }
+    // Check if c is alphanumeric, underscore, or dot
+    private static boolean isAlnumUnderscoreDot(char c) {
+        return Character.isLetterOrDigit(c) || c == '_' || c == '.';
+    }
+
+    public static List<String> generalTokenizer(String sourceCode) {
         List<String> tokens = new ArrayList<>();
+        int i = 0;
+        int length = sourceCode.length();
 
-        for (String line : lines) {
-            // We split on (or around) '{' or '}'
-            // Using a regex that looks "ahead" and "behind"
-            // so we keep the braces as separate tokens.
-            // The pattern `(?=[{}])|(?<=[{}])` means:
-            //   - Split the string whenever we're about to see '{' or '}'
-            //   - Or split the string right after we've seen '{' or '}'
-            String[] parts = line.split("(?=[{}])|(?<=[{}])");
+        while (i < length) {
+            char ch = sourceCode.charAt(i);
 
-            for (String p : parts) {
-                String trimmed = p.trim();
-                if (!trimmed.isEmpty()) {
-                    tokens.add(trimmed);
+            // 1. Skip whitespace
+            if (Character.isWhitespace(ch)) {
+                i++;
+                continue;
+            }
+
+            // 2. Check for multi-character operator
+            if (i + 1 < length) {
+                String twoChars = "" + ch + sourceCode.charAt(i + 1);
+                if (MULTI_CHAR_OPERATORS.contains(twoChars)) {
+                    tokens.add(twoChars);
+                    i += 2;
+                    continue;
                 }
+            }
+
+            // 3. Check single-character operator
+            if (SINGLE_CHAR_TOKENS.contains(ch)) {
+                tokens.add(String.valueOf(ch));
+                i++;
+                continue;
+            }
+
+            // 4. If it's alnum/underscore/dot, consume entire run
+            if (isAlnumUnderscoreDot(ch)) {
+                int start = i;
+                while (i < length && isAlnumUnderscoreDot(sourceCode.charAt(i))) {
+                    i++;
+                }
+                tokens.add(sourceCode.substring(start, i));
+                continue;
+            }
+
+            // 5. Otherwise, it's illegal
+            tokens.add("ILLEGAL(" + ch + ")");
+            i++;
+        }
+
+        return tokens;
+    }
+
+    static List<List<String>> groupInstructions(List<String> tokens) {
+        List<List<String>> instructions = new ArrayList<>();
+        List<String> current = new ArrayList<>();
+
+        for (String token : tokens) {
+            if (token.equals(";")) {
+                // End the current instruction (discard ";")
+                if (!current.isEmpty()) {
+                    instructions.add(new ArrayList<>(current));
+                    current.clear();
+                }
+            } else if (token.equals("{") || token.equals("}")) {
+                // If there's a current instruction, finalize it
+                if (!current.isEmpty()) {
+                    instructions.add(new ArrayList<>(current));
+                    current.clear();
+                }
+                // Then push the single-token instruction for "{" or "}"
+                instructions.add(Arrays.asList(token));
+            } else {
+                // Normal token, add it to current
+                current.add(token);
             }
         }
 
-        return tokens;
-    }
-
-    public static List<String> tokenizeParentheses(String[] lines) {
-        List<String> tokens = new ArrayList<>();
-
-        for (String line : lines) {
-            // Similarly, we split on `(` or `)`
-            // The regex is `(?=[()])|(?<=[()])`
-            // which looks ahead and behind for '(' or ')'.
-            String[] parts = line.split("(?=[()])|(?<=[()])");
-
-            for (String p : parts) {
-                String trimmed = p.trim();
-                if (!trimmed.isEmpty()) {
-                    tokens.add(trimmed);
-                }
-            }
+        // If there's anything left in 'current' at the end, push it
+        if (!current.isEmpty()) {
+            instructions.add(current);
         }
-
-        return tokens;
+        return instructions;
     }
 
-    public static String[] commaRemover(String input) {
+    static String[] commaRemover(String input) {
         if (input == null || input.isEmpty()) {
             // Return an empty array if the input is null or empty
             return new String[0];

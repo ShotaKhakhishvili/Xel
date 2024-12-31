@@ -50,7 +50,7 @@ public class Memory {
         variables.add(varName);
     }
 
-    public Variable getVariable(String varName) throws CompilationError {
+    public Variable getVariable(String varName) {
         if(bools.containsKey(varName))
             return bools.get(varName);
         if(chars.containsKey(varName))
@@ -71,7 +71,7 @@ public class Memory {
         return strings.get(varName);
     }
 
-    public void setVariable(String varName, String value) throws CompilationError {
+    public void setVariable(String varName, String value) {
         long longValue;
         double doubleValue = Double.parseDouble(value);
         if(value.contains("."))

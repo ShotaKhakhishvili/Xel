@@ -9,8 +9,8 @@ public class NodeEXP extends TreeNode {
     CompType expType;
     String value;
 
-    public NodeEXP(String value, CompType expType, Scope scope) {
-        super(scope);
+    public NodeEXP(String value, CompType expType, TreeNode parentNode) {
+        super(parentNode);
         this.value = value;
         this.expType = expType;
     }

@@ -1,7 +1,6 @@
 package Compilation.SyntaxTree;
 
 import Compilation.CompType;
-import Compilation.Scope;
 import Compilation.Variable;
 import Exceptions.CompilationError;
 
@@ -15,8 +14,8 @@ public class NodeASGM extends TreeNode {
     String varName;
     NodeEXP exp;
 
-    public NodeASGM(String varName, CompType asgmType, NodeEXP exp, Scope scope) {
-        super(scope);
+    public NodeASGM(String varName, CompType asgmType, NodeEXP exp, TreeNode parentNode) {
+        super(parentNode);
         this.varName = varName;
         this.type = asgmType;
         this.exp = exp;
