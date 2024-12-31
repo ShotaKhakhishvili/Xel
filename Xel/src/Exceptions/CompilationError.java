@@ -17,6 +17,10 @@ public class CompilationError extends Throwable {
         put(11,"Unfinished Assignment [Error Code 11]");
         put(12,"Unknown Assignment Operator [Error Code 12]");
         put(13,"Illegal Scope Closing Detected [Error Code 13]");
+        put(14,"Illegal Expression. Can't Pow Operation On Strings [Error Code 14]");
+        put(15,"Illegal Expression. Can't Apply Binary Operations On Strings [Error Code 15]");
+        put(16,"Invalid Boolean Expression [Error Code 16]");
+        put(404,"Invalid Instruction [Error Code 404]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

@@ -33,6 +33,12 @@ public class Decoder {
         }
     };
 
+    private static final Set<String> extraKeys = new HashSet<>(){{
+            add("true");
+            add("false");
+            add("jaybe");
+    }};
+
     public static final Map<CompType, BinaryOperator<Variable>> BIOP_Functions = new HashMap<>(){
         {
             put(ADD, Variable::add);
@@ -40,10 +46,29 @@ public class Decoder {
             put(DIV, Variable::div);
             put(MULT, Variable::mult);
             put(MOD, Variable::mod);
+            put(POW, Variable::pow);
+
+            put(AND, (Variable a, Variable b) -> a.binaries(b, AND));
+            put(OR, (Variable a, Variable b) -> a.binaries(b, OR));
+            put(EQ, (Variable a, Variable b) -> a.binaries(b, EQ));
+            put(NEQ, (Variable a, Variable b) -> a.binaries(b, NEQ));
+            put(GRE, (Variable a, Variable b) -> a.binaries(b, GRE));
+            put(LE, (Variable a, Variable b) -> a.binaries(b, LE));
+            put(GEQ, (Variable a, Variable b) -> a.binaries(b, GEQ));
+            put(LEQ, (Variable a, Variable b) -> a.binaries(b, LEQ));
+            put(NOT, (Variable a, Variable b) -> a.binaries(b, NOT));
         }
     };
-    public static final Map<String, CompType> BIOP_Types = new HashMap<>(){
+    public static final Map<String, CompType> OP_Types = new HashMap<>(){
         {
+            put("&&", AND);
+            put("||", OR);
+            put("==", EQ);
+            put("!=", NEQ);
+            put(">", GRE);
+            put("<", LE);
+            put(">=", GEQ);
+            put("<=", LEQ);
             put("+", ADD);
             put("-", SUB);
             put("/", DIV);
@@ -54,11 +79,20 @@ public class Decoder {
         }
     };
     private static final Map<String,Integer> precedence = new HashMap<>(){{
+        put("&&",-2);
+        put("||",-1);
+        put("==",0);
+        put("!=",0);
+        put(">",0);
+        put("<",0);
+        put(">=",0);
+        put("<=",0);
         put("+", 1);
         put("-", 1);
         put("*", 2);
         put("/", 2);
         put("%", 2);
+        put("^", 3);
     }};
 
     static final Map<String,CompType> scopedInstructions = new HashMap<>(){
@@ -113,8 +147,9 @@ public class Decoder {
 
     static NodeEXP EXP_checkValidity( String[] parts, TreeNode parentNode) throws CompilationError {
         for(String part : parts){
+            if(OP_Types.containsKey(part))continue;
             for(char ch : part.toCharArray()){
-                if(invalidNameChars.contains(ch) && !BIOP_Types.containsKey(Character.toString(ch)) && ch != '(' && ch != ')' && ch != '.')
+                if(invalidNameChars.contains(ch) && ch != '(' && ch != ')' && ch != '.')
                     throw new CompilationError(5);//CODE5
             }
         }
@@ -123,39 +158,14 @@ public class Decoder {
     }
 
     public static NodeEXP EXP_checkSyntax(String[] tokens,int l, int r, TreeNode parentNode) throws CompilationError {
-        if(r - l == 0)
-            throw  new CompilationError(8);//CODE8
-        if(r - l == 1){
-            try {
-                try {
-                    Long.parseLong(String.valueOf(tokens[l]));
-                    return new NodeEXP(tokens[l], LIT, parentNode);
-                }catch (NumberFormatException e){
-                    Double.parseDouble(String.valueOf(tokens[l]));
-                    return new NodeEXP(tokens[l], LIT, parentNode);
-                }
-            }catch (NumberFormatException e){
-                if (parentNode.getScope().containsVariable(tokens[l]))
-                    return new NodeEXP(tokens[l], VAR, parentNode);
-                throw new CompilationError(9);//CODE9
-            }
-        }
-        if(tokens[l].equals("-")){
-            String[] newSequence = new String[r-l+1];
-            newSequence[0] = "0";
-            for(int i = l; i < r; i++){
-                newSequence[i-l+1] = tokens[i];
-            }
-            return EXP_checkSyntax(newSequence,0,r-l+1, parentNode);
-        }
-        if(tokens[l].equals("+")){
-            return EXP_checkSyntax(tokens,l+1,r, parentNode);
-        }
+        NodeEXP edgeCases = edgeCases(tokens,l,r,parentNode);
+        if(edgeCases != null)
+            return edgeCases;
 
         NodeEXP left;
         NodeEXP right;
 
-        for(int j = 1; j <= 2; j++){
+        for(int j = -2; j <= 3; j++){
             int i = r - 1;
             int low = -1, high = -1;
             while(i > l){
@@ -208,7 +218,7 @@ public class Decoder {
                 left = EXP_checkSyntax(tokens, l, low, parentNode);
                 right = EXP_checkSyntax(tokens, high, r, parentNode);
 
-                NodeEXP answer = new NodeEXP(tokens[high-1], BIOP_Types.get(tokens[high-1]), parentNode);
+                NodeEXP answer = new NodeEXP(tokens[high-1], OP_Types.get(tokens[high-1]), parentNode);
 
                 answer.getChildren().add(left);
                 answer.getChildren().add(right);
@@ -220,6 +230,50 @@ public class Decoder {
         throw new CompilationError(11);//CODE11
     }
 
+    static NodeEXP edgeCases(String[] tokens,int l, int r, TreeNode parentNode) throws CompilationError {
+        if(r - l == 0)
+            throw  new CompilationError(8);//CODE8
+        if(r - l == 1){
+            try {
+                try {
+                    Long.parseLong(String.valueOf(tokens[l]));
+                    return new NodeEXP(tokens[l], LIT, parentNode);
+                }catch (NumberFormatException e){
+                    Double.parseDouble(String.valueOf(tokens[l]));
+                    return new NodeEXP(tokens[l], LIT, parentNode);
+                }
+            }catch (NumberFormatException e){
+                if (parentNode.getScope().containsVariable(tokens[l]))
+                    return new NodeEXP(tokens[l], VAR, parentNode);
+                else if(extraKeys.contains(tokens[l]))
+                    return new NodeEXP(tokens[l], LIT, parentNode);
+                throw new CompilationError(9);//CODE9
+            }
+        }
+        if(tokens[l].equals("!")){
+            String[] newSequence = new String[r-l+1];
+            newSequence[0] = "0";
+            for(int i = l; i < r; i++){
+                newSequence[i-l+1] = tokens[i];
+            }
+            newSequence[1] = "==";
+            return EXP_checkSyntax(newSequence,0,r-l+1, parentNode);
+        }
+        if(tokens[l].equals("-")){
+            String[] newSequence = new String[r-l+1];
+            newSequence[0] = "0";
+            for(int i = l; i < r; i++){
+                newSequence[i-l+1] = tokens[i];
+            }
+            return EXP_checkSyntax(newSequence,0,r-l+1, parentNode);
+        }
+        if(tokens[l].equals("+")){
+            return EXP_checkSyntax(tokens,l+1,r, parentNode);
+        }
+
+        return null;
+    }
+
     static NodeASGM ASGM_checkValidity(String[] parts, TreeNode parentNode) throws CompilationError {
         if(!parentNode.getScope().containsVariable(parts[0]))
             throw new CompilationError(10);//CODE10
@@ -227,13 +281,13 @@ public class Decoder {
         if(parts.length < 2)
             throw new CompilationError(11);//CODE11
 
-        CompType asgmType;
+        CompType asgm;
 
         if(parts[1].equals("="))
-            asgmType = ASGM;
-        else if(BIOP_Types.containsKey(String.valueOf(parts[1].charAt(0)))){
+            asgm = ASGM;
+        else if(OP_Types.containsKey(String.valueOf(parts[1].charAt(0)))){
             if(parts[1].length() == 2 && parts[1].charAt(1) == '=')
-                asgmType = BIOP_Types.get(String.valueOf(parts[1].charAt(0)));
+                asgm = OP_Types.get(String.valueOf(parts[1].charAt(0)));
             else
                 throw new CompilationError(12);//CODE12
         }
@@ -242,7 +296,7 @@ public class Decoder {
 
         NodeEXP exp = EXP_checkValidity(Arrays.copyOfRange(parts,2, parts.length), parentNode);
 
-        return new NodeASGM(parts[0], asgmType, exp, parentNode);
+        return new NodeASGM(parts[0], asgm, exp, parentNode);
     }
 }
 

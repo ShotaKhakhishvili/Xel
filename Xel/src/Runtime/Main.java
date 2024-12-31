@@ -18,17 +18,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static Compilation.CompType.*;
+import static Compilation.Decoder.BIOP_Functions;
+
 public class Main {
     public static void main(String[] args) throws CompilationError {
 
         Parser parser = new Parser(args[0]);
         parser.readFile();
         Pair<String[],Integer>[] instructions = LinesToInstructions.getInstructions(parser.getLines());
-//
-//        for(Pair<String[],Integer> pair : instructions){
-//            String instruction = Arrays.toString(pair.getFirst());
-//            System.out.println(instruction);
-//        }
+
+        for(Pair<String[],Integer> pair : instructions){
+            String instruction = Arrays.toString(pair.getFirst());
+            System.out.println(instruction);
+        }
 
         // ANSI escape code for red text
         final String RED = "\033[0;31m";
@@ -42,6 +45,12 @@ public class Main {
             System.out.println(GREEN + "Compilation Success!" + RESET);
 
             program.execute();
+
+            System.out.println("a: " + program.getScopeMemory().getVariable("a").value.toString());
+            System.out.println("b: " + program.getScopeMemory().getVariable("b").value.toString());
+            System.out.println("c: " + program.getScopeMemory().getVariable("c").value.toString());
+            System.out.println("d: " + program.getScopeMemory().getVariable("d").value.toString());
+
         }catch (CompilationError e){
             System.out.println(RED + "Compilation Error: " + e.getMessage() + RESET);
         }catch (RuntimeError e){

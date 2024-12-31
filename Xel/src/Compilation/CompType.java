@@ -31,8 +31,9 @@ public enum CompType {
     LIT,        // Literal
     VAR,        // Variable
 
-    ADD,SUB,MULT,DIV,MOD,POW, // Used for expressions and for assignments
-    INC,DEC,    // Increment/Decrement fo assignments
+    AND,OR,GRE,LE,EQ,NEQ,GEQ,LEQ,NOT,  // Boolean Expressions
+    ADD,SUB,MULT,DIV,MOD,POW,   // Used for expressions and for assignments
+    INC,DEC,                    // Increment/Decrement fo assignments
 
     INVALID,
 }

@@ -1,13 +1,6 @@
-int a,b,c
-int g; int d;{int f}int lol;
-{
-    int f
-    f = 15
-}
-int f
-float h
-a+= (14 * 19) % c
-b= a * 3 + 10.334F * 3
-g=10f*3.5
-c= g *3
-
+bool a,c
+float b,d
+a = jaybe
+c = !true
+d = ((15 + 18) % 3) + (13 / 4) * 3 + 2
+b = (d % 2) && (!a || c - 1) + 15

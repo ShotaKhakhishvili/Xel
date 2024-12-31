@@ -32,16 +32,4 @@ public class NodeASGM extends TreeNode {
             getScope().setVariable(varName, newValue.value.toString());
         }
     }
-
-    public CompType getType(){
-        return type;
-    }
-
-    public String getVarName() {
-        return varName;
-    }
-
-    public NodeEXP getExp() {
-        return exp;
-    }
 }

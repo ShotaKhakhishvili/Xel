@@ -1,18 +1,21 @@
 package Compilation;
 
+import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
 
 import java.util.Arrays;
+import java.util.concurrent.CompletionException;
 
 import static Compilation.CompType.*;
 
 public class Variable<T>{
     public T value;
 
-    private static CompType[][] varTypeClassess = new CompType[][]{
+    private static CompType[][] varTypeClasses = new CompType[][]{
             {
                     BOOL,CHAR,BYTE,SHORT,INT,LONG
             },
+            
             {
                     FLOAT,DOUBLE
             }
@@ -94,6 +97,35 @@ public class Variable<T>{
         return castNumToAppropriate(getDoubleValue(this) % getDoubleValue(other), thisType, otherType);
     }
 
+    public Variable pow(Variable other){
+        CompType thisType = this.getVarType();
+        CompType otherType = other.getVarType();
+
+        if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
+            throw new RuntimeException("14");
+
+        return castNumToAppropriate(Math.pow(getDoubleValue(this), getDoubleValue(other)), thisType, otherType);
+    }
+
+    public Variable<Boolean> binaries(Variable other, CompType type){
+        CompType thisType = this.getVarType();
+        CompType otherType = other.getVarType();
+
+        if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
+            throw new RuntimeException("15");
+
+        return switch (type){
+            case AND -> new Variable<>(getDoubleValue(this) != 0.0 && getDoubleValue(other) != 0.0);
+            case OR -> new Variable<>(getDoubleValue(this) != 0.0 || getDoubleValue(other) != 0.0);
+            case EQ -> new Variable<>(getDoubleValue(this) == getDoubleValue(other));
+            case NEQ -> new Variable<>(getDoubleValue(this) != getDoubleValue(other));
+            case GRE -> new Variable<>(getDoubleValue(this) > getDoubleValue(other));
+            case LE -> new Variable<>(getDoubleValue(this) < getDoubleValue(other));
+            case GEQ -> new Variable<>(getDoubleValue(this) >= getDoubleValue(other));
+            default -> new Variable<>(getDoubleValue(this) <= getDoubleValue(other));
+        };
+    }
+
     private StringBuilder stringMultiplication(Variable other, CompType thisType) {
         String str;
         long cnt;
@@ -131,22 +163,15 @@ public class Variable<T>{
 
     private static Variable castNumToAppropriate(Double num, CompType a, CompType b){
         CompType dominantType = minCompType(a,b);
-        switch (dominantType){
-            case BOOL:
-                return new Variable(num.longValue() != 0);
-            case CHAR:
-                return new Variable((char)num.longValue());
-            case BYTE:
-                return new Variable(num.byteValue());
-            case SHORT:
-                return new Variable(num.shortValue());
-            case INT:
-                return new Variable(num.intValue());
-            case FLOAT:
-                return new Variable(num.longValue());
-            default:
-                return new Variable<>(num);
-        }
+        return switch (dominantType){
+            case BOOL -> new Variable(num.longValue() != 0);
+            case CHAR -> new Variable((char)num.longValue());
+            case BYTE -> new Variable(num.byteValue());
+            case SHORT -> new Variable(num.shortValue());
+            case INT -> new Variable(num.intValue());
+            case FLOAT -> new Variable(num.longValue());
+            default -> new Variable<>(num);
+        };
     }
 
     private CompType getVarType(){
@@ -176,13 +201,13 @@ public class Variable<T>{
         if(a == STRING || b == STRING)
             return STRING;
 
-        if(Arrays.stream(varTypeClassess[1]).toList().contains(a) ||
-                Arrays.stream(varTypeClassess[1]).toList().contains(b)){
+        if(Arrays.stream(varTypeClasses[1]).toList().contains(a) ||
+                Arrays.stream(varTypeClasses[1]).toList().contains(b)){
             if(a == DOUBLE || b == DOUBLE)
                 return DOUBLE;
             return FLOAT;
         }
-        for(CompType type : varTypeClassess[0])
+        for(CompType type : varTypeClasses[0])
             if(type == a || type == b)
                 answer = type;
 

@@ -73,28 +73,34 @@ public class Memory {
 
     public void setVariable(String varName, String value) {
         long longValue;
-        double doubleValue = Double.parseDouble(value);
-        if(value.contains("."))
+        double doubleValue = 0;
+        if(value.equals("true") || value.equals("false")){
+            longValue = value.equals("true") ? 1L : 0L;
+            doubleValue = value.equals("true") ? 1.0 : 0.0;
+        }
+        else if(value.contains(".") || value.contains("f") || value.contains("F"))
             longValue = Long.parseLong(String.valueOf((long)Double.parseDouble(value)));
-        else
+        else{
+            doubleValue = Double.parseDouble(value);
             longValue = Long.parseLong(value);
+        }
         if(bools.containsKey(varName))
             bools.put(varName, new Variable<>(longValue != 0));
-        if(chars.containsKey(varName))
-            chars.put(varName, new Variable<>(value.charAt(0)));
-        if(bytes.containsKey(varName))
+        else if(chars.containsKey(varName))
+            chars.put(varName, new Variable<>((char)longValue));
+        else if(bytes.containsKey(varName))
             bytes.put(varName, new Variable<>((byte)longValue));
-        if(shorts.containsKey(varName))
+        else if(shorts.containsKey(varName))
             shorts.put(varName, new Variable<>((short)longValue));
-        if(ints.containsKey(varName))
+        else if(ints.containsKey(varName))
             ints.put(varName, new Variable<>((int)longValue));
-        if(longs.containsKey(varName))
+        else if(longs.containsKey(varName))
             longs.put(varName, new Variable<>(longValue));
-        if(floats.containsKey(varName))
+        else if(floats.containsKey(varName))
             floats.put(varName, new Variable<>((float)doubleValue));
-        if(doubles.containsKey(varName))
+        else if(doubles.containsKey(varName))
             doubles.put(varName, new Variable<>(doubleValue));
-        if(strings.containsKey(varName))
+        else
             strings.put(varName, new Variable<>(value));
     }
 
