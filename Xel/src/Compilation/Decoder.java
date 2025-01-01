@@ -31,13 +31,7 @@ public class Decoder {
         }
     };
 
-    private static final Set<String> extraKeys = new HashSet<>(){{
-            add("true");
-            add("false");
-            add("jaybe");
-    }};
-
-    public static final Map<CompType, BinaryOperator<Variable>> BIOP_Functions = new HashMap<>(){
+    public static final Map<CompType, BinaryOperator<Variable<?>>> BIOP_Functions = new HashMap<>(){
         {
             put(ADD, Variable::add);
             put(SUB, Variable::sub);
@@ -46,15 +40,15 @@ public class Decoder {
             put(MOD, Variable::mod);
             put(POW, Variable::pow);
 
-            put(AND, (Variable a, Variable b) -> a.binaries(b, AND));
-            put(OR, (Variable a, Variable b) -> a.binaries(b, OR));
-            put(EQ, (Variable a, Variable b) -> a.binaries(b, EQ));
-            put(NEQ, (Variable a, Variable b) -> a.binaries(b, NEQ));
-            put(GRE, (Variable a, Variable b) -> a.binaries(b, GRE));
-            put(LE, (Variable a, Variable b) -> a.binaries(b, LE));
-            put(GEQ, (Variable a, Variable b) -> a.binaries(b, GEQ));
-            put(LEQ, (Variable a, Variable b) -> a.binaries(b, LEQ));
-            put(NOT, (Variable a, Variable b) -> a.binaries(b, NOT));
+            put(AND, (a,b) -> a.binaries(b, AND));
+            put(OR, (a,b) -> a.binaries(b, OR));
+            put(EQ, (a,b) -> a.binaries(b, EQ));
+            put(NEQ, (a,b) -> a.binaries(b, NEQ));
+            put(GRE, (a,b) -> a.binaries(b, GRE));
+            put(LE, (a,b) -> a.binaries(b, LE));
+            put(GEQ, (a,b) -> a.binaries(b, GEQ));
+            put(LEQ, (a,b) -> a.binaries(b, LEQ));
+            put(NOT, (a,b) -> a.binaries(b, NOT));
         }
     };
     public static final Map<String, CompType> OP_Types = new HashMap<>(){
@@ -126,8 +120,6 @@ public class Decoder {
     }
 
     static TreeNode DECL_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
-        String variablesJoined = String.join("", Arrays.copyOfRange(tokens, 1, tokens.length));
-
         String[][] declarations = Functions.declarationSeperator(Arrays.copyOfRange(tokens,1,tokens.length));
         String[] variables = new String[declarations.length];
         NodeEXP[] initExps = new NodeEXP[declarations.length];
@@ -139,6 +131,8 @@ public class Decoder {
 
             if(!invalidNameChars.contains(declaration[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0'))
                 parentNode.getScopeMemory().declareVariable(declaration[0], Variable.getDefaultValue(varType), varType);
+            else
+                throw new CompilationError(0);
 
             if(declaration.length == 1)// Declaration without initialization
                 initExps[i] = new NodeEXP(Variable.getDefaultValue(varType).toString(), LIT, parentNode);
@@ -249,11 +243,10 @@ public class Decoder {
             }catch (NumberFormatException e){
                 if (parentNode.getScope().containsVariable(tokens[l]))
                     return new NodeEXP(tokens[l], VAR, parentNode);
-                else if(extraKeys.contains(tokens[l]))
-                    return new NodeEXP(tokens[l], LIT, parentNode);
                 else if(tokens[l].charAt(0) == '"' && tokens[l].length() > 1 && tokens[l].charAt(tokens[l].length()-1) == '"')
                     return new NodeEXP(tokens[l], LIT, parentNode);
-                System.out.println(Arrays.toString(Arrays.copyOfRange(tokens,l,r)));
+                else if(Variable.boolKeys.containsKey(tokens[l]) || Variable.longKeys.containsKey(tokens[l]) || Variable.doubleKeys.containsKey(tokens[l]))
+                    return new NodeEXP(tokens[l], LIT, parentNode);
                 throw new CompilationError(9);//CODE9
             }
         }

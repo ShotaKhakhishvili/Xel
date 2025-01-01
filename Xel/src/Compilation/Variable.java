@@ -1,17 +1,39 @@
 package Compilation;
 
-import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
 
 import java.util.Arrays;
-import java.util.concurrent.CompletionException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static Compilation.CompType.*;
 
 public class Variable<T>{
     public T value;
 
-    private static CompType[][] varTypeClasses = new CompType[][]{
+    public static final Map<String,Boolean> boolKeys = new HashMap<>(){{
+        put("true", true);
+        put("false", false);
+        put("jaybe", Math.random() > 0.5);
+    }};
+    public static final Map<String,Long> longKeys = new HashMap<>(){{
+        put("BYTE_MIN", (long) Byte.MIN_VALUE);
+        put("BYTE_MAX", (long) Byte.MAX_VALUE);
+        put("SHORT_MIN", (long)Short.MIN_VALUE);
+        put("SHORT_MAX", (long)Short.MAX_VALUE);
+        put("INT_MIN", (long)Integer.MIN_VALUE);
+        put("INT_MAX", (long)Integer.MAX_VALUE);
+        put("LONG_MIN", Long.MIN_VALUE);
+        put("LONG_MAX", Long.MAX_VALUE);
+    }};
+    public static final Map<String,Double> doubleKeys = new HashMap<>(){{
+        put("FLOAT_MIN", (double) Float.MIN_VALUE);
+        put("FLOAT_MAX", (double) Float.MAX_VALUE);
+        put("DOUBLE_MIN", Double.MIN_VALUE);
+        put("DOUBLE_MAX", Double.MAX_VALUE);
+    }};
+
+    private static final CompType[][] varTypeClasses = new CompType[][]{
             {
                     BOOL,CHAR,BYTE,SHORT,INT,LONG
             },
@@ -30,7 +52,7 @@ public class Variable<T>{
             case LONG -> 0L;
             case FLOAT -> 0f;
             case DOUBLE -> 0.0;
-            case STRING -> "";
+            case STRING -> "\"\"";
             default -> '\u0000';
         };
     }
@@ -39,8 +61,8 @@ public class Variable<T>{
         this.value = value;
     }
 
-    public Variable add(Variable other){
-        CompType thisType = this.getVarType();
+    public Variable<?> add(Variable<?> other){
+        CompType thisType = getVarType();
         CompType otherType = other.getVarType();
 
         if(thisType.equals(STRING) || otherType.equals(STRING))
@@ -49,20 +71,20 @@ public class Variable<T>{
         return castNumToAppropriate(getDoubleValue(this) + getDoubleValue(other), thisType, otherType);
     }
 
-    public Variable sub(Variable other){
-        CompType thisType = this.getVarType();
+    public Variable<?> sub(Variable<?> other){
+        CompType thisType = getVarType();
         CompType otherType = other.getVarType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
             return new Variable<>((String.valueOf(value)).replaceFirst(String.valueOf(other.value) ,""));
 
-        if(otherType.equals(STRING))
+        if(thisType.equals(STRING))
             throw new RuntimeError(201);
 
         return castNumToAppropriate(getDoubleValue(this) - getDoubleValue(other), thisType, otherType);
     }
 
-    public Variable mult(Variable other){
+    public Variable<?> mult(Variable<?> other){
         CompType thisType = this.getVarType();
         CompType otherType = other.getVarType();
 
@@ -78,7 +100,7 @@ public class Variable<T>{
         return castNumToAppropriate(getDoubleValue(this) * getDoubleValue(other), thisType, otherType);
     }
 
-    public Variable div(Variable other){
+    public Variable<?> div(Variable<?> other){
         CompType thisType = this.getVarType();
         CompType otherType = other.getVarType();
 
@@ -87,7 +109,7 @@ public class Variable<T>{
 
         return castNumToAppropriate(getDoubleValue(this) / getDoubleValue(other), thisType, otherType);
     }
-    public Variable mod(Variable other){
+    public Variable<?> mod(Variable<?> other){
         CompType thisType = this.getVarType();
         CompType otherType = other.getVarType();
         
@@ -97,22 +119,22 @@ public class Variable<T>{
         return castNumToAppropriate(getDoubleValue(this) % getDoubleValue(other), thisType, otherType);
     }
 
-    public Variable pow(Variable other){
+    public Variable<?> pow(Variable<?> other){
         CompType thisType = this.getVarType();
         CompType otherType = other.getVarType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
-            throw new RuntimeException("14");
+            throw new RuntimeError(14);
 
         return castNumToAppropriate(Math.pow(getDoubleValue(this), getDoubleValue(other)), thisType, otherType);
     }
 
-    public Variable<Boolean> binaries(Variable other, CompType type){
+    public Variable<Boolean> binaries(Variable<?> other, CompType type){
         CompType thisType = this.getVarType();
         CompType otherType = other.getVarType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
-            throw new RuntimeException("15");
+            throw new RuntimeError(15);
 
         return switch (type){
             case AND -> new Variable<>(getDoubleValue(this) != 0.0 && getDoubleValue(other) != 0.0);
@@ -126,7 +148,7 @@ public class Variable<T>{
         };
     }
 
-    private StringBuilder stringMultiplication(Variable other, CompType thisType) {
+    private StringBuilder stringMultiplication(Variable<?> other, CompType thisType) {
         String str;
         long cnt;
 
@@ -154,22 +176,22 @@ public class Variable<T>{
         if (lastIndex == -1) {
             return a; // Return original string if 'b' is not found
         }
-        return new Variable<String>(a.value.substring(0, lastIndex) + a.value.substring(lastIndex + b.value.length()));
+        return new Variable<>(a.value.substring(0, lastIndex) + a.value.substring(lastIndex + b.value.length()));
     }
 
-    private static double getDoubleValue(Variable a){
+    private static double getDoubleValue(Variable<?> a){
         return a.getVarType() == BOOL ? (String.valueOf(a.value).equals("true") ? 1 : 0) : Double.parseDouble(String.valueOf(a.value));
     }
 
-    private static Variable castNumToAppropriate(Double num, CompType a, CompType b){
+    private static Variable<?> castNumToAppropriate(Double num, CompType a, CompType b){
         CompType dominantType = minCompType(a,b);
         return switch (dominantType){
-            case BOOL -> new Variable(num.longValue() != 0);
-            case CHAR -> new Variable((char)num.longValue());
-            case BYTE -> new Variable(num.byteValue());
-            case SHORT -> new Variable(num.shortValue());
-            case INT -> new Variable(num.intValue());
-            case FLOAT -> new Variable(num.longValue());
+            case BOOL -> new Variable<>(num.longValue() != 0);
+            case CHAR -> new Variable<>((char)num.longValue());
+            case BYTE -> new Variable<>(num.byteValue());
+            case SHORT -> new Variable<>(num.shortValue());
+            case INT -> new Variable<>(num.intValue());
+            case FLOAT -> new Variable<>(num.longValue());
             default -> new Variable<>(num);
         };
     }
@@ -212,5 +234,41 @@ public class Variable<T>{
                 answer = type;
 
         return answer;
+    }
+
+    public static long strToLong(String str){
+        if(boolKeys.containsKey(str))
+            return boolKeys.get(str)? 1L : 0L;
+        if(longKeys.containsKey(str))
+            return longKeys.get(str);
+        if(doubleKeys.containsKey(str))
+            return doubleKeys.get(str).longValue();
+        try {
+            return Long.parseLong(str);
+        } catch (NumberFormatException e) {
+            try {
+                return Double.valueOf(str).longValue();
+            } catch (NumberFormatException ex) {
+                throw new RuntimeError(205);//CODE205
+            }
+        }
+    }
+
+    public static double strToDouble(String str){
+        if(boolKeys.containsKey(str))
+            return boolKeys.get(str)? 1 : 0;
+        if(longKeys.containsKey(str))
+            return longKeys.get(str).doubleValue();
+        if(doubleKeys.containsKey(str))
+            return doubleKeys.get(str);
+        try {
+            return Double.parseDouble(str);
+        } catch (NumberFormatException e) {
+            throw new RuntimeError(206);//CODE206
+        }
+    }
+
+    public static boolean strToBool(String str){
+        return strToLong(str) == 1;
     }
 }

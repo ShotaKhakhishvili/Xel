@@ -7,7 +7,7 @@ import Exceptions.CompilationError;
 import java.util.function.BinaryOperator;
 
 import static Compilation.CompType.*;
-import static Compilation.Decoder.BIOP_Functions;
+import static Compilation.Decoder.*;
 
 public class NodeASGM extends TreeNode {
     private final CompType type;
@@ -27,8 +27,8 @@ public class NodeASGM extends TreeNode {
         if(type == ASGM)
             getScope().setVariable(varName, val);
         else{
-            BinaryOperator<Variable> binaryOperator = BIOP_Functions.get(type);
-            Variable newValue = binaryOperator.apply(getScope().getVariable(varName), exp.evaluate());
+            BinaryOperator<Variable<?>> binaryOperator = BIOP_Functions.get(type);
+            Variable<?> newValue = binaryOperator.apply(getScope().getVariable(varName), exp.evaluate());
             getScope().setVariable(varName, newValue.value.toString());
         }
     }

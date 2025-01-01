@@ -20,14 +20,14 @@ public class NodeEXP extends TreeNode {
     }
 
     @Override
-    public Variable evaluate() throws CompilationError {
+    public Variable<?> evaluate() throws CompilationError {
         CompType type = expType;
         if(Decoder.OP_Types.containsValue(type)){
 
             NodeEXP left = (NodeEXP) getChildren().get(0);
             NodeEXP right = (NodeEXP) getChildren().get(1);
 
-            Variable evalR = right.evaluate();
+            Variable<?> evalR = right.evaluate();
 
             if(evalR.value.toString().equals("0") || evalR.value.toString().equals("0.0"))
             {
@@ -37,31 +37,24 @@ public class NodeEXP extends TreeNode {
                     throw new RuntimeError(203);
             }
 
-            Variable evalL = left.evaluate();
+            Variable<?> evalL = left.evaluate();
 
             return Decoder.BIOP_Functions.get(type).apply(evalL,evalR);
         }
 
         String val = getValue();
-        if(val.contains("\""))
-            return new Variable<>(value.substring(1,val.length()-1));
 
         if(type == VAR)
             val = getScope().getVariable(value).value.toString();
 
-        try {
-            if(val.equals("true"))
-                return new Variable<>(true);
-            else if(val.equals("false"))
-                return new Variable<>(false);
-            else if(val.equals("jaybe"))
-                return new Variable<>(Math.random() > 0.5);
+        if(val.charAt(0) == '"')
+            return new Variable<>(val.substring(1,val.length()-1));
 
-            Long a = Long.parseLong(val);
-            return new Variable<>(a);
+        long longValue = Variable.strToLong(val);
 
-        } catch (NumberFormatException e) {
-            return new Variable<>(Double.parseDouble(val));
-        }
+        if(String.valueOf(longValue).equals(val))
+            return new Variable<>(longValue);
+
+        return new Variable<>(Variable.strToDouble(val));
     }
 }

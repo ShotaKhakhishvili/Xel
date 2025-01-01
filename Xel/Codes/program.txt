@@ -1,7 +1,11 @@
-bool a = true,c
-print "hola amigos, yo soy " + a
-print "hello " * 5
-float b,d = 14,g = 18
-{
-print (d + g) / 2; print ((d + g) / 2) ^ 3
+string r = ("123") + 4 + " "
+print r * 2
+int a = INT_MAX
+print a
+a++
+print 1.0 + 4{
+string str = "15" + 0.4
 }
+string str = 15.123
+print "str: _" + str + "_"
+

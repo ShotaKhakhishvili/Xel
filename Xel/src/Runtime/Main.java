@@ -14,14 +14,10 @@ import Extra.Pair;
 import Extra.Parser;
 
 import java.security.KeyPair;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static Compilation.CompType.*;
-import static Compilation.Decoder.BIOP_Functions;
-import static Compilation.Decoder.EXP_checkSyntax;
+import static Compilation.Decoder.*;
 
 public class Main {
     public static void main(String[] args) throws CompilationError {
@@ -42,10 +38,18 @@ public class Main {
         // ANSI escape code to reset color
         final String RESET = "\033[0m";
 
+        List<List<String>> matrix = new ArrayList<>();
+
+        String[][] nes = matrix.stream().map(l -> new String[0]).toArray(String[][]::new);
+
         try{
+            long compileStart = System.currentTimeMillis();
             TreeNode program = Compiler.compile(instructions);
-            System.out.println(GREEN + "Compilation Success!" + RESET);
+            long compileEnd = System.currentTimeMillis();
+            System.out.println(GREEN + "Compilation Success! Done in " + (compileEnd-compileStart) + "ms" + RESET);
             program.execute();
+            long runtimeEnd = System.currentTimeMillis();
+            System.out.println(GREEN + "Program execution finished in " + (runtimeEnd-compileEnd) + "ms" + RESET);
         }catch (CompilationError e){
             System.out.println(RED + "Compilation Error: " + e.getMessage() + RESET);
         }catch (RuntimeError e){

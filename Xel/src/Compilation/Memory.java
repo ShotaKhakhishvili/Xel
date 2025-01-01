@@ -5,9 +5,11 @@ import Exceptions.CompilationError;
 import java.util.*;
 import java.util.concurrent.CompletionException;
 
+import static Compilation.CompType.*;
+
 public class Memory {
-    private Set<String> variables = new HashSet<>();
-    private Scope owner;
+    private final Set<String> variables = new HashSet<>();
+    private final Scope owner;
 
     public Memory(Scope owner){
         this.owner = owner;
@@ -23,7 +25,7 @@ public class Memory {
     private final Map<String,Variable<Double>> doubles = new HashMap<>();
     private final Map<String,Variable<String>> strings = new HashMap<>();
 
-    private Map<String,Functions> functions = new HashMap<>();
+    private final Map<String,Functions> functions = new HashMap<>();
 
     public void declareVariable(String varName, Object varValue, CompType varType) throws CompilationError {
         if(owner.containsVariable(varName))
@@ -43,7 +45,7 @@ public class Memory {
         variables.add(varName);
     }
 
-    public Variable getVariable(String varName) {
+    public Variable<?> getVariable(String varName) {
         if(bools.containsKey(varName))
             return bools.get(varName);
         if(chars.containsKey(varName))
@@ -61,42 +63,48 @@ public class Memory {
         if(doubles.containsKey(varName))
             return doubles.get(varName);
 
-        return strings.get(varName);
+        return new Variable<>("\"" + strings.get(varName).value + "\"");
     }
 
     public void setVariable(String varName, String value) {
-        long longValue;
-        double doubleValue = 0;
-
-        if(value.equals("true") || value.equals("false")){
-            longValue = value.equals("true") ? 1L : 0L;
-            doubleValue = value.equals("true") ? 1.0 : 0.0;
-        }else{
-            if(value.contains(".") || value.contains("f") || value.contains("F"))
-                longValue = Long.parseLong(String.valueOf((long)Double.parseDouble(value)));
-            else
-                longValue = Long.parseLong(value);
-            doubleValue = Double.parseDouble(value);
-        }
-
         if(bools.containsKey(varName))
-            bools.put(varName, new Variable<>(longValue != 0));
+            bools.put(varName, new Variable<>(Variable.strToBool(value)));
         else if(chars.containsKey(varName))
-            chars.put(varName, new Variable<>((char)longValue));
+            chars.put(varName, new Variable<>((char)Variable.strToLong(value)));
         else if(bytes.containsKey(varName))
-            bytes.put(varName, new Variable<>((byte)longValue));
+            bytes.put(varName, new Variable<>((byte)Variable.strToLong(value)));
         else if(shorts.containsKey(varName))
-            shorts.put(varName, new Variable<>((short)longValue));
+            shorts.put(varName, new Variable<>((short)Variable.strToLong(value)));
         else if(ints.containsKey(varName))
-            ints.put(varName, new Variable<>((int)longValue));
+            ints.put(varName, new Variable<>((int)Variable.strToLong(value)));
         else if(longs.containsKey(varName))
-            longs.put(varName, new Variable<>(longValue));
+            longs.put(varName, new Variable<>(Variable.strToLong(value)));
         else if(floats.containsKey(varName))
-            floats.put(varName, new Variable<>((float)doubleValue));
+            floats.put(varName, new Variable<>((float)Variable.strToDouble(value)));
         else if(doubles.containsKey(varName))
-            doubles.put(varName, new Variable<>(doubleValue));
+            doubles.put(varName, new Variable<>(Variable.strToDouble(value)));
         else
             strings.put(varName, new Variable<>(value));
+    }
+
+    private CompType getVarType(String varName){
+        if(bools.containsKey(varName))
+            return BOOL;
+        else if(chars.containsKey(varName))
+            return CHAR;
+        else if(bytes.containsKey(varName))
+            return BYTE;
+        else if(shorts.containsKey(varName))
+            return SHORT;
+        else if(ints.containsKey(varName))
+            return INT;
+        else if(longs.containsKey(varName))
+            return LONG;
+        else if(floats.containsKey(varName))
+            return FLOAT;
+        else if(doubles.containsKey(varName))
+            return DOUBLE;
+        return STRING;
     }
 
     public Map<String, Functions> getFunctions() {
