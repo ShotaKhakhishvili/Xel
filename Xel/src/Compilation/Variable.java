@@ -10,6 +10,7 @@ import static Compilation.CompType.*;
 
 public class Variable<T>{
     public T value;
+    private final CompType type;
 
     public static final Map<String,Boolean> boolKeys = new HashMap<>(){{
         put("true", true);
@@ -57,26 +58,45 @@ public class Variable<T>{
         };
     }
 
-    public Variable(T value) {
+    public Variable(T value, CompType type) {
         this.value = value;
+        this.type = type;
+    }
+
+    public CompType getType() {
+        return type;
+    }
+
+    public void setValue(String value) {
+        switch (type){
+            case BOOL -> this.value = (T)String.valueOf(Variable.strToBool(value));
+            case CHAR -> this.value = (T)String.valueOf((char)Variable.strToLong(value));
+            case BYTE -> this.value = (T)String.valueOf((byte)Variable.strToLong(value));
+            case SHORT -> this.value = (T)String.valueOf((short)Variable.strToLong(value));
+            case INT -> this.value = (T)String.valueOf((int)Variable.strToLong(value));
+            case LONG -> this.value = (T)String.valueOf(Variable.strToLong(value));
+            case FLOAT -> this.value = (T)String.valueOf((float)Variable.strToDouble(value));
+            case DOUBLE -> this.value = (T)String.valueOf(Variable.strToDouble(value));
+            case STRING -> this.value = (T)value;
+        }
     }
 
     public Variable<?> add(Variable<?> other){
-        CompType thisType = getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = getType();
+        CompType otherType = other.getType();
 
         if(thisType.equals(STRING) || otherType.equals(STRING))
-            return new Variable<>(String.valueOf(value) + other.value);
+            return new Variable<>(String.valueOf(value) + other.value, STRING);
 
         return castNumToAppropriate(getDoubleValue(this) + getDoubleValue(other), thisType, otherType);
     }
 
     public Variable<?> sub(Variable<?> other){
-        CompType thisType = getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = getType();
+        CompType otherType = other.getType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
-            return new Variable<>((String.valueOf(value)).replaceFirst(String.valueOf(other.value) ,""));
+            return new Variable<>((String.valueOf(value)).replaceFirst(String.valueOf(other.value) ,""), STRING);
 
         if(thisType.equals(STRING))
             throw new RuntimeError(201);
@@ -85,8 +105,8 @@ public class Variable<T>{
     }
 
     public Variable<?> mult(Variable<?> other){
-        CompType thisType = this.getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = this.getType();
+        CompType otherType = other.getType();
 
         if(thisType.equals(STRING) && otherType.equals(STRING))
             throw new RuntimeError(202);
@@ -94,24 +114,24 @@ public class Variable<T>{
         if(thisType.equals(STRING) || otherType.equals(STRING)){
             StringBuilder answerString = stringMultiplication(other, thisType);
 
-            return new Variable<>(answerString.toString());
+            return new Variable<>(answerString.toString(), STRING);
         }
 
         return castNumToAppropriate(getDoubleValue(this) * getDoubleValue(other), thisType, otherType);
     }
 
     public Variable<?> div(Variable<?> other){
-        CompType thisType = this.getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = this.getType();
+        CompType otherType = other.getType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
-            return new Variable<>((String.valueOf(value)).replaceAll(String.valueOf(other.value) ,""));
+            return new Variable<>((String.valueOf(value)).replaceAll(String.valueOf(other.value) ,""), STRING);
 
         return castNumToAppropriate(getDoubleValue(this) / getDoubleValue(other), thisType, otherType);
     }
     public Variable<?> mod(Variable<?> other){
-        CompType thisType = this.getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = this.getType();
+        CompType otherType = other.getType();
         
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
             return replaceLast((Variable<String>) this, (Variable<String>)other);
@@ -120,8 +140,8 @@ public class Variable<T>{
     }
 
     public Variable<?> pow(Variable<?> other){
-        CompType thisType = this.getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = this.getType();
+        CompType otherType = other.getType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
             throw new RuntimeError(14);
@@ -130,21 +150,21 @@ public class Variable<T>{
     }
 
     public Variable<Boolean> binaries(Variable<?> other, CompType type){
-        CompType thisType = this.getVarType();
-        CompType otherType = other.getVarType();
+        CompType thisType = this.getType();
+        CompType otherType = other.getType();
 
         if(thisType.equals(STRING) && (otherType.equals(STRING) || otherType.equals(CHAR)))
             throw new RuntimeError(15);
 
         return switch (type){
-            case AND -> new Variable<>(getDoubleValue(this) != 0.0 && getDoubleValue(other) != 0.0);
-            case OR -> new Variable<>(getDoubleValue(this) != 0.0 || getDoubleValue(other) != 0.0);
-            case EQ -> new Variable<>(getDoubleValue(this) == getDoubleValue(other));
-            case NEQ -> new Variable<>(getDoubleValue(this) != getDoubleValue(other));
-            case GRE -> new Variable<>(getDoubleValue(this) > getDoubleValue(other));
-            case LE -> new Variable<>(getDoubleValue(this) < getDoubleValue(other));
-            case GEQ -> new Variable<>(getDoubleValue(this) >= getDoubleValue(other));
-            default -> new Variable<>(getDoubleValue(this) <= getDoubleValue(other));
+            case AND -> new Variable<>(getDoubleValue(this) != 0.0 && getDoubleValue(other) != 0.0, BOOL);
+            case OR -> new Variable<>(getDoubleValue(this) != 0.0 || getDoubleValue(other) != 0.0, BOOL);
+            case EQ -> new Variable<>(getDoubleValue(this) == getDoubleValue(other), BOOL);
+            case NEQ -> new Variable<>(getDoubleValue(this) != getDoubleValue(other), BOOL);
+            case GRE -> new Variable<>(getDoubleValue(this) > getDoubleValue(other), BOOL);
+            case LE -> new Variable<>(getDoubleValue(this) < getDoubleValue(other), BOOL);
+            case GEQ -> new Variable<>(getDoubleValue(this) >= getDoubleValue(other), BOOL);
+            default -> new Variable<>(getDoubleValue(this) <= getDoubleValue(other), BOOL);
         };
     }
 
@@ -176,45 +196,26 @@ public class Variable<T>{
         if (lastIndex == -1) {
             return a; // Return original string if 'b' is not found
         }
-        return new Variable<>(a.value.substring(0, lastIndex) + a.value.substring(lastIndex + b.value.length()));
+        return new Variable<>(a.value.substring(0, lastIndex) + a.value.substring(lastIndex + b.value.length()), STRING);
     }
 
     private static double getDoubleValue(Variable<?> a){
-        return a.getVarType() == BOOL ? (String.valueOf(a.value).equals("true") ? 1 : 0) : Double.parseDouble(String.valueOf(a.value));
+        return a.getType() == BOOL ? (String.valueOf(a.value).equals("true") ? 1 : 0) : Double.parseDouble(String.valueOf(a.value));
     }
 
     private static Variable<?> castNumToAppropriate(Double num, CompType a, CompType b){
         CompType dominantType = minCompType(a,b);
         return switch (dominantType){
-            case BOOL -> new Variable<>(num.longValue() != 0);
-            case CHAR -> new Variable<>((char)num.longValue());
-            case BYTE -> new Variable<>(num.byteValue());
-            case SHORT -> new Variable<>(num.shortValue());
-            case INT -> new Variable<>(num.intValue());
-            case FLOAT -> new Variable<>(num.longValue());
-            default -> new Variable<>(num);
+            case BOOL -> new Variable<>(num.longValue() != 0, BOOL);
+            case CHAR -> new Variable<>((char)num.longValue(), CHAR);
+            case BYTE -> new Variable<>(num.byteValue(), BYTE);
+            case SHORT -> new Variable<>(num.shortValue(), SHORT);
+            case INT -> new Variable<>(num.intValue(), INT);
+            case LONG -> new Variable<>(num.longValue(), LONG);
+            case FLOAT -> new Variable<>(num.floatValue(), FLOAT);
+            case DOUBLE -> new Variable<>(num, DOUBLE);
+            default -> new Variable<>(num,STRING);
         };
-    }
-
-    private CompType getVarType(){
-        if(value instanceof Boolean)
-            return BOOL;
-        if(value instanceof Character)
-            return CHAR;
-        if(value instanceof Byte)
-            return BYTE;
-        if(value instanceof Short)
-            return SHORT;
-        if(value instanceof Integer)
-            return INT;
-        if(value instanceof Long)
-            return FLOAT;
-        if(value instanceof Float)
-            return FLOAT;
-        if(value instanceof Double)
-            return DOUBLE;
-
-        return STRING;
     }
 
     public static CompType minCompType(CompType a, CompType b){

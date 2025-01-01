@@ -130,7 +130,7 @@ public class Decoder {
             variables[i] = declaration[0];
 
             if(!invalidNameChars.contains(declaration[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0'))
-                parentNode.getScopeMemory().declareVariable(declaration[0], Variable.getDefaultValue(varType), varType);
+                parentNode.getScopeMemory().declareVariable(declaration[0], String.valueOf(Variable.getDefaultValue(varType)), varType);
             else
                 throw new CompilationError(0);
 
@@ -314,6 +314,31 @@ public class Decoder {
 
     static NodePRINT PRINT_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
         return new NodePRINT(EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode),parentNode);
+    }
+
+    static NodeINPUT INPUT_checkValidity(String[] token, TreeNode parentNode) throws CompilationError{
+        String printString = "";
+        int i = 1;
+        if(token[1].charAt(0) == '"' && token[1].charAt(token[1].length()-1) == '"') {
+            printString = token[1].substring(1,token[1].length()-1);
+            i++;
+        }
+        if(token.length == i)
+            throw new CompilationError(14);
+
+        List<String> varNames = new ArrayList<>();
+
+        while(i < token.length){
+            if(token[i].equals(","))continue;
+            if(!parentNode.getScope().containsVariable(token[i])){
+                System.out.println(token[i]);
+                throw new CompilationError(15);
+            }
+            varNames.add(token[i]);
+            i++;
+        }
+
+        return new NodeINPUT(printString, varNames.toArray(new String[0]), parentNode);
     }
 }
 

@@ -94,8 +94,6 @@ public interface Functions {
             i++;
         }
 
-        System.out.println(Arrays.toString(tokens.toArray(new String[0])));
-
         return tokens;
     }
 
@@ -129,24 +127,6 @@ public interface Functions {
             instructions.add(current);
         }
         return instructions;
-    }
-
-    static String[] commaRemover(String input) {
-        if (input == null || input.isEmpty()) {
-            // Return an empty array if the input is null or empty
-            return new String[0];
-        }
-
-        // Split on commas; "\\s*" can optionally be used around the comma
-        // to also trim whitespace, e.g. input.split("\\s*,\\s*")
-        String[] tokens = input.split(",");
-
-        // (Optional) Trim each token in case there's leading/trailing whitespace
-        for (int i = 0; i < tokens.length; i++) {
-            tokens[i] = tokens[i].trim();
-        }
-
-        return tokens;
     }
 
     static String[][] declarationSeperator(String[] tokens){

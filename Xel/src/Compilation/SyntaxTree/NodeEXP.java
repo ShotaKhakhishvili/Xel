@@ -44,17 +44,19 @@ public class NodeEXP extends TreeNode {
 
         String val = getValue();
 
-        if(type == VAR)
-            val = getScope().getVariable(value).value.toString();
+        if(type == VAR) {
+            Variable<?> var = getScope().getVariable(value);
+            return new Variable<>(var.value.toString(), var.getType());
+        }
 
         if(val.charAt(0) == '"')
-            return new Variable<>(val.substring(1,val.length()-1));
+            return new Variable<>(val.substring(1,val.length()-1), STRING);
 
         long longValue = Variable.strToLong(val);
 
-        if(String.valueOf(longValue).equals(val))
-            return new Variable<>(longValue);
+        if(String.valueOf(longValue).equals(val) || Variable.longKeys.containsKey(val))
+            return new Variable<>(Variable.strToLong(val), LONG);
 
-        return new Variable<>(Variable.strToDouble(val));
+        return new Variable<>(Variable.strToDouble(val), DOUBLE);
     }
 }

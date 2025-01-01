@@ -15,12 +15,12 @@ public class CompilationError extends Throwable {
         put(7,"Illegal Operation Sequence On Expression [Error Code 7]");
         put(8,"Not Enough Parameters On Arithmetic Expression [Error Code 8]");
         put(9,"Unknown Argument On Arithmetic Expression [Error Code 9]");
-        put(10,"Assignment On Unknown Variable Detected [Error Code 10]");
+        put(10,"Tried To Access An Unknown Variable[Error Code 10]");
         put(11,"Illegal Expression [Error Code 11]");
         put(12,"Unknown Assignment Operator [Error Code 12]");
         put(13,"Illegal Scope Closing Detected [Error Code 13]");
-//        put(14,"Illegal Expression. Can't Pow Operation On Strings [Error Code 14]");
-//        put(15,"Illegal Expression. Can't Apply Binary Operations On Strings [Error Code 15]");
+        put(14,"Not Enough Parameters For An Input Statement[Error Code 14]");
+        put(15,"Tried An Input Statement On An Undeclared Variable [Error Code 15]");
         put(16,"Invalid Boolean Expression [Error Code 16]");
         put(17,"Extra Symbols On An Increment Operation [Error Code 17]");
         put(18,"Extra Symbols On A Decrement Operation [Error Code 18]");

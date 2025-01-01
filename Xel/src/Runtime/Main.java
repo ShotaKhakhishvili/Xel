@@ -4,6 +4,7 @@ import Compilation.Compiler;
 import Compilation.LinesToInstructions;
 import Compilation.Scope;
 import Compilation.SyntaxTree.NodeDECL;
+import Compilation.SyntaxTree.NodeINPUT;
 import Compilation.SyntaxTree.NodePRINT;
 import Compilation.SyntaxTree.TreeNode;
 import Compilation.Variable;
@@ -12,6 +13,7 @@ import Exceptions.RuntimeError;
 import Extra.Functions;
 import Extra.Pair;
 import Extra.Parser;
+import com.sun.source.tree.Tree;
 
 import java.security.KeyPair;
 import java.util.*;
@@ -21,15 +23,14 @@ import static Compilation.Decoder.*;
 
 public class Main {
     public static void main(String[] args) throws CompilationError {
-
         Parser parser = new Parser(args[0]);
         parser.readFile();
         Pair<String[],Integer>[] instructions = LinesToInstructions.getInstructions(parser.getLines());
 
-        for(Pair<String[],Integer> pair : instructions){
-            String instruction = Arrays.toString(pair.getFirst());
-            System.out.println("Line " + pair.getSecond() + ": " + instruction);
-        }
+//        for(Pair<String[],Integer> pair : instructions){
+//            String instruction = Arrays.toString(pair.getFirst());
+//            System.out.println("Line " + pair.getSecond() + ": " + instruction);
+//        }
 
         // ANSI escape code for red text
         final String RED = "\033[0;31m";

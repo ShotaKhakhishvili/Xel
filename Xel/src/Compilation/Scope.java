@@ -19,7 +19,7 @@ public class Scope {
 
     public boolean containsVariable(String varName){
         Scope scope = this;
-        while(!scope.memory.getVariables().contains(varName)){
+        while(!scope.memory.getVariables().containsKey(varName)){
             if(scope.parentScope == null)
                 return false;
             scope = scope.parentScope;
@@ -40,7 +40,7 @@ public class Scope {
             throw new CompilationError(10);
 
         Scope scope = this;
-        while(!scope.getMemory().getVariables().contains(varName))
+        while(!scope.getMemory().getVariables().containsKey(varName))
             scope = scope.parentScope;
 
         return scope.getMemory();

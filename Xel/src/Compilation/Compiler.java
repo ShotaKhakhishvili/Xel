@@ -60,6 +60,7 @@ public class Compiler {
             case ASGM -> Decoder.ASGM_checkValidity(instruction, parentNode);
             case EXP -> Decoder.EXP_checkValidity(instruction, parentNode);
             case PRINT -> Decoder.PRINT_checkValidity(instruction, parentNode);
+            case INPUT -> Decoder.INPUT_checkValidity(instruction, parentNode);
             default -> throw new CompilationError(404);
         };
     }
