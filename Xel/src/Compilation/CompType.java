@@ -14,6 +14,8 @@ public enum CompType {
     ELIF,       // Else If
     WHILE,      // While loop
     FOR,        // For loop
+    BRK,        // Break
+    CNT,        // Continue
     FCALL,      // Function Call
     FDEC,       // Function Declaration
 

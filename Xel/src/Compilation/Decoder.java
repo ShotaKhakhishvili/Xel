@@ -3,7 +3,7 @@ package Compilation;
 import Compilation.SyntaxTree.*;
 import Exceptions.CompilationError;
 import Extra.Functions;
-import com.sun.source.tree.Tree;
+import org.w3c.dom.Node;
 
 import java.util.*;
 import java.util.function.BinaryOperator;
@@ -95,6 +95,8 @@ public class Decoder {
             put("func", FDEC);
             put("print", PRINT);
             put("input", INPUT);
+            put("break", BRK);
+            put("continue", CNT);
         }
     };
 
@@ -252,25 +254,23 @@ public class Decoder {
                 throw new CompilationError(9);//CODE9
             }
         }
-        if(tokens[l].equals("!")){
-            String[] newSequence = new String[r-l+1];
-            newSequence[0] = "0";
-            for(int i = l; i < r; i++){
-                newSequence[i-l+1] = tokens[i];
+        switch (tokens[l]) {
+            case "!" -> {
+                String[] newSequence = new String[r - l + 1];
+                newSequence[0] = "0";
+                if (r - l >= 0) System.arraycopy(tokens, l, newSequence, 1, r - l);
+                newSequence[1] = "==";
+                return EXP_checkSyntax(newSequence, 0, r - l + 1, parentNode);
             }
-            newSequence[1] = "==";
-            return EXP_checkSyntax(newSequence,0,r-l+1, parentNode);
-        }
-        if(tokens[l].equals("-")){
-            String[] newSequence = new String[r-l+1];
-            newSequence[0] = "0";
-            for(int i = l; i < r; i++){
-                newSequence[i-l+1] = tokens[i];
+            case "-" -> {
+                String[] newSequence = new String[r - l + 1];
+                newSequence[0] = "0";
+                if (r - l >= 0) System.arraycopy(tokens, l, newSequence, 1, r - l);
+                return EXP_checkSyntax(newSequence, 0, r - l + 1, parentNode);
             }
-            return EXP_checkSyntax(newSequence,0,r-l+1, parentNode);
-        }
-        if(tokens[l].equals("+")){
-            return EXP_checkSyntax(tokens,l+1,r, parentNode);
+            case "+" -> {
+                return EXP_checkSyntax(tokens, l + 1, r, parentNode);
+            }
         }
 
         return null;
@@ -331,7 +331,10 @@ public class Decoder {
         List<String> varNames = new ArrayList<>();
 
         while(i < tokens.length){
-            if(tokens[i].equals(","))continue;
+            if(tokens[i].equals(",")){
+                i++;
+                continue;
+            }
             if(!parentNode.getScope().containsVariable(tokens[i])){
                 System.out.println(tokens[i]);
                 throw new CompilationError(15);
@@ -352,6 +355,31 @@ public class Decoder {
         NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,2,tokens.length), parentNode);
 
         return new NodeIF(statement,  parentNode);
+    }
+
+    static NodeWHILE WHILE_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode);
+
+        return new NodeWHILE(statement, parentNode);
+    }
+
+    static NodeCMD NodeCMD(CompType cmd, TreeNode parentNode) throws CompilationError {
+        boolean b = switch (cmd){
+            case CNT,BRK ->{
+                TreeNode parent = parentNode;
+                while(parent.getParentNode() != null){
+                    if(parent instanceof NodeWHILE)
+                        yield true;
+                }
+                yield false;
+            }
+            default -> false;
+        };
+        switch (cmd){
+            case CNT -> throw new CompilationError(23);
+            case BRK -> throw new CompilationError(24);
+            default -> throw new CompilationError(404);
+        }
     }
 }
 

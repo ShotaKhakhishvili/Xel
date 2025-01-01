@@ -117,7 +117,9 @@ public interface Functions {
                 }
                 // Then push the single-token instruction for "{" or "}"
                 instructions.add(List.of(token));
-            } else if(current.size() == 1 && !token.equals("if") && current.get(0).equals("else")){
+            } else if((current.size() == 1 && !token.equals("if") && current.get(0).equals("else")) ||
+                    (current.size() == 1 && current.get(0).equals("continue")) ||
+                    (current.size() == 1 && current.get(0).equals("break"))){
                 instructions.add(new ArrayList<>(current));
                 current.clear();
                 current.add(token);
@@ -179,6 +181,7 @@ public interface Functions {
             if(current.get(0).equals("if")) return true;
             if(current.get(0).equals("print")) return true;
             if(current.get(0).equals("input")) return true;
+            if(current.get(0).equals("while")) return true;
         }
         if(current.size() == 3){
             if(current.get(0).equals("else") && current.get(1).equals("if")) return true;
@@ -191,7 +194,7 @@ public interface Functions {
             current.remove(2);
         }
         else if(current.get(0).equals("if") || current.get(0).equals("print") ||
-                current.get(0).equals("input") || current.get(0).equals("else")){
+                current.get(0).equals("input") || current.get(0).equals("else") || current.get(0).equals("while") ){
             current.remove(1);
         }
        current.remove(current.size()-1);

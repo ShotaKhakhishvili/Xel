@@ -1,8 +1,6 @@
 package Compilation;
 
-import Compilation.SyntaxTree.NodeEXP;
-import Compilation.SyntaxTree.NodeIF;
-import Compilation.SyntaxTree.TreeNode;
+import Compilation.SyntaxTree.*;
 import Exceptions.CompilationError;
 import Extra.Pair;
 
@@ -42,7 +40,6 @@ public class Compiler {
                 TreeNode newNode = evaluateNode(type, instruction, currentProgram);
                 currentProgram.addChild(newNode);
 
-
                 // If the new statement is a scope statement, we climb down to it.
                 if(newNode.isScopeStatement())
                     currentProgram = newNode;
@@ -62,7 +59,6 @@ public class Compiler {
                     throw new RuntimeException(ex);
                 }
             }
-
         }
 
         if(currentProgram.isScopeShortenable())
@@ -78,6 +74,9 @@ public class Compiler {
             case PRINT -> Decoder.PRINT_checkValidity(instruction, parentNode);
             case INPUT -> Decoder.INPUT_checkValidity(instruction, parentNode);
             case IF -> Decoder.IF_checkValidity(instruction, parentNode);
+            case WHILE -> Decoder.WHILE_checkValidity(instruction,parentNode);
+            case CNT -> new NodeCMD(CNT, parentNode);
+            case BRK -> new NodeCMD(BRK, parentNode);
             case ELIF -> { // If the last statement was not NodeIF type, then we throw an error.
                 if(parentNode.getChildren().isEmpty() ||
                         !(parentNode.getChildren().get(parentNode.getChildren().size()-1) instanceof NodeIF))

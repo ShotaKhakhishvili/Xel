@@ -15,6 +15,7 @@ public class TreeNode {
     private Scope scope;
     private TreeNode parentNode;
     private int line;
+    protected boolean exit;
 
     public TreeNode(){
         line = Compiler.currentLine;
@@ -73,12 +74,29 @@ public class TreeNode {
         boolean ifChain = false;
         for(TreeNode child : getChildren()){
             try {
+                if(child instanceof NodeCMD){
+                    switch (((NodeCMD) child).getCommandType()){
+                        case CNT -> {
+                            return;
+                        }
+                        case BRK -> {
+                            TreeNode currNode = getParentNode();
+                            while(!(currNode instanceof NodeWHILE)){
+                                currNode.exit = true;
+                                currNode = currNode.getParentNode();
+                            }
+                            currNode.exit = true;
+                            return;
+                        }
+                    }
+                }
                 if(child instanceof NodeIF){
                     if(ifChain)continue;
                     ifChain = ((NodeIF) child).evaluate();
                     continue;
                 }
                 ifChain = false;
+                if(exit)break;
                 executeChild(child);
             }catch (RuntimeError e){
                 throw new RuntimeError(e.getMessage(), child.getLine());
@@ -87,7 +105,6 @@ public class TreeNode {
     }
 
     private void executeChild(TreeNode child) throws CompilationError {
-//        if()
         child.execute();
     }
 

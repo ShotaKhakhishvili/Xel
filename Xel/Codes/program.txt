@@ -1,10 +1,13 @@
-float a = "14.3"
-input "input a: " a
-if (a > 50) print ("a is greater than 50")
-else if (a > 30) print("a is greater than 30")
-else{
-    print ("a is less than or equal to 30")
-    print("yippiee");
+int a
+input "Input num: " a
+int i = 2
+bool answer = true;
+while(i < a){
+    print i
+    continue
+    i++;
 }
-
-
+if (answer == true)
+    print "number is prime"
+else
+    print "number is not prime"

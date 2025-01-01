@@ -28,6 +28,8 @@ public class CompilationError extends Throwable {
         put(20,"Unfinished Initialization [Error Code 20]");
         put(21,"Statement Expected [Error Code 21]");
         put(22,"Else If Statement Without An If Statement [Error Code 22]");
+        put(23,"Continue Statement Needs To Be Inside A Loop [Error Code 23]");
+        put(24,"Break Statement Needs To Be Inside A Loop [Error Code 24]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);
