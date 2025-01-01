@@ -1,12 +1,10 @@
-string r = ("123") + 4 + " print "
-print r * 2
-print 1.0 + 4{
-string str = "15" + 0.4
-}
-string str = 15.123
-print "str: _" + str + "_"
-str = "hola, como estas? "
 float a = "14.3"
-print a
-input "give me an a: " a
-print a
+input "input a: " a
+if (a > 50) print ("a is greater than 50")
+else if (a > 30) print("a is greater than 30")
+else{
+    print ("a is less than or equal to 30")
+    print("yippiee");
+}
+
+

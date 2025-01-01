@@ -20,12 +20,14 @@ public class CompilationError extends Throwable {
         put(12,"Unknown Assignment Operator [Error Code 12]");
         put(13,"Illegal Scope Closing Detected [Error Code 13]");
         put(14,"Not Enough Parameters For An Input Statement[Error Code 14]");
-        put(15,"Tried An Input Statement On An Undeclared Variable [Error Code 15]");
+        put(15,"Illegal Input Statement [Error Code 15]");
         put(16,"Invalid Boolean Expression [Error Code 16]");
         put(17,"Extra Symbols On An Increment Operation [Error Code 17]");
         put(18,"Extra Symbols On A Decrement Operation [Error Code 18]");
         put(19,"Illegal Declaration [Error Code 19]");
         put(20,"Unfinished Initialization [Error Code 20]");
+        put(21,"Statement Expected [Error Code 21]");
+        put(22,"Else If Statement Without An If Statement [Error Code 22]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

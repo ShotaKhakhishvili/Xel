@@ -90,8 +90,6 @@ public class Decoder {
     static final Map<String,CompType> scopedInstructions = new HashMap<>(){
         {
             put("if", IF);
-            put("elif", ELIF);
-            put("else", ELSE);
             put("while", WHILE);
             put("for", FOR);
             put("func", FDEC);
@@ -115,6 +113,10 @@ public class Decoder {
             return FCALL;
         if(parentNode.getScope().containsVariable(tokens[0]))
             return ASGM;
+        if(tokens.length >= 2 && tokens[0].equals("else") && tokens[1].equals("if"))
+            return ELIF;
+        if(tokens[0].equals("else"))
+            return ELSE;
 
         return INVALID;
     }
@@ -316,29 +318,40 @@ public class Decoder {
         return new NodePRINT(EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode),parentNode);
     }
 
-    static NodeINPUT INPUT_checkValidity(String[] token, TreeNode parentNode) throws CompilationError{
+    static NodeINPUT INPUT_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError{
         String printString = "";
         int i = 1;
-        if(token[1].charAt(0) == '"' && token[1].charAt(token[1].length()-1) == '"') {
-            printString = token[1].substring(1,token[1].length()-1);
+        if(tokens[1].charAt(0) == '"' && tokens[1].charAt(tokens[1].length()-1) == '"') {
+            printString = tokens[1].substring(1,tokens[1].length()-1);
             i++;
         }
-        if(token.length == i)
+        if(tokens.length == i)
             throw new CompilationError(14);
 
         List<String> varNames = new ArrayList<>();
 
-        while(i < token.length){
-            if(token[i].equals(","))continue;
-            if(!parentNode.getScope().containsVariable(token[i])){
-                System.out.println(token[i]);
+        while(i < tokens.length){
+            if(tokens[i].equals(","))continue;
+            if(!parentNode.getScope().containsVariable(tokens[i])){
+                System.out.println(tokens[i]);
                 throw new CompilationError(15);
             }
-            varNames.add(token[i]);
+            varNames.add(tokens[i]);
             i++;
         }
 
         return new NodeINPUT(printString, varNames.toArray(new String[0]), parentNode);
+    }
+
+    static NodeIF IF_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode);
+
+        return new NodeIF(statement,  parentNode);
+    }
+    static NodeIF ELSEIF_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,2,tokens.length), parentNode);
+
+        return new NodeIF(statement,  parentNode);
     }
 }
 

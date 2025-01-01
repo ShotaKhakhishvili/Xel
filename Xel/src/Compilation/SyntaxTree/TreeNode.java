@@ -70,16 +70,37 @@ public class TreeNode {
 
     public void execute() throws CompilationError {
         scope.getMemory().delete();
+        boolean ifChain = false;
         for(TreeNode child : getChildren()){
             try {
-                child.execute();
+                if(child instanceof NodeIF){
+                    if(ifChain)continue;
+                    ifChain = ((NodeIF) child).evaluate();
+                    continue;
+                }
+                ifChain = false;
+                executeChild(child);
             }catch (RuntimeError e){
                 throw new RuntimeError(e.getMessage(), child.getLine());
             }
         }
     }
+
+    private void executeChild(TreeNode child) throws CompilationError {
+//        if()
+        child.execute();
+    }
+
     public Object evaluate() throws CompilationError {
         return null;
+    }
+
+    public boolean isScopeShortenable(){
+        return false;
+    }
+
+    public boolean isScopeStatement(){
+        return false;
     }
 }
 

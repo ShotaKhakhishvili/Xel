@@ -43,6 +43,7 @@ public class Scope {
         while(!scope.getMemory().getVariables().containsKey(varName))
             scope = scope.parentScope;
 
+
         return scope.getMemory();
     }
 

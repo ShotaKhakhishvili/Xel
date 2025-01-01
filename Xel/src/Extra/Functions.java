@@ -101,7 +101,8 @@ public interface Functions {
         List<List<String>> instructions = new ArrayList<>();
         List<String> current = new ArrayList<>();
 
-        for (String token : tokens) {
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
             if (token.equals(";")) {
                 // End the current instruction (discard ";")
                 if (!current.isEmpty()) {
@@ -115,10 +116,35 @@ public interface Functions {
                     current.clear();
                 }
                 // Then push the single-token instruction for "{" or "}"
-                instructions.add(Arrays.asList(token));
-            } else {
-                // Normal token, add it to current
+                instructions.add(List.of(token));
+            } else if(current.size() == 1 && !token.equals("if") && current.get(0).equals("else")){
+                instructions.add(new ArrayList<>(current));
+                current.clear();
                 current.add(token);
+            }
+            else {
+                current.add(token);
+
+
+                // This is for edge cases, where we require expressions to be separated from statements after it that are on the same line
+                // example: else if (a > b) a++
+                // this will be split into two instruction: ["else","if","(","a",">","b",")"] and ["a","++"]
+                if(isBracketedStatement(current)){
+                    int bracketCount = 0;
+                    while (i < tokens.size()){
+                        if(tokens.get(i).equals("("))
+                            bracketCount++;
+                        if(tokens.get(i).equals(")"))
+                            bracketCount--;
+                        if(bracketCount == 0)
+                            break;
+                        i++;
+                        if(i < tokens.size())
+                            current.add(tokens.get(i));
+                    }
+                    instructions.add(new ArrayList<>(polishBracketedStatement(current)));
+                    current.clear();
+                }
             }
         }
 
@@ -145,4 +171,30 @@ public interface Functions {
             list.remove(list.size()-1);
         return list.stream().map(l -> l.toArray(new String[0])).toArray(String[][]::new);
     }
+
+   static boolean isBracketedStatement(List<String> current){
+        if(current.size() < 2) return false;
+        if(!current.get(current.size()-1).equals("("))return false;
+        if(current.size() == 2){
+            if(current.get(0).equals("if")) return true;
+            if(current.get(0).equals("print")) return true;
+            if(current.get(0).equals("input")) return true;
+        }
+        if(current.size() == 3){
+            if(current.get(0).equals("else") && current.get(1).equals("if")) return true;
+        }
+        return false;
+   }
+
+   static List<String> polishBracketedStatement(List<String> current){
+        if(current.get(0).equals("else") && current.get(1).equals("if")){
+            current.remove(2);
+        }
+        else if(current.get(0).equals("if") || current.get(0).equals("print") ||
+                current.get(0).equals("input") || current.get(0).equals("else")){
+            current.remove(1);
+        }
+       current.remove(current.size()-1);
+       return current;
+   }
 }
