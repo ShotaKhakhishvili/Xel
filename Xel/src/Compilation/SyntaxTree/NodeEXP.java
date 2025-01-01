@@ -43,6 +43,8 @@ public class NodeEXP extends TreeNode {
         }
 
         String val = getValue();
+        if(val.contains("\""))
+            return new Variable<>(value.substring(1,val.length()-1));
 
         if(type == VAR)
             val = getScope().getVariable(value).value.toString();

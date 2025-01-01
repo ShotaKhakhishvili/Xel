@@ -68,7 +68,18 @@ public interface Functions {
                 continue;
             }
 
-            // 4. If it's alnum/underscore/dot, consume entire run
+            // 4. If it's a string start, consume until its finished
+            if(ch == '"'){
+                int start = i++;
+                while(i < length && sourceCode.charAt(i) != '"'){
+                    i++;
+                }
+                if(i < sourceCode.length())i++;
+                tokens.add(sourceCode.substring(start,i));
+                continue;
+            }
+
+            // 5. If it's alnum/underscore/dot, consume entire run
             if (isAlnumUnderscoreDot(ch)) {
                 int start = i;
                 while (i < length && isAlnumUnderscoreDot(sourceCode.charAt(i))) {
@@ -78,10 +89,12 @@ public interface Functions {
                 continue;
             }
 
-            // 5. Otherwise, it's illegal
+            // 6. Otherwise, it's illegal
             tokens.add("ILLEGAL(" + ch + ")");
             i++;
         }
+
+        System.out.println(Arrays.toString(tokens.toArray(new String[0])));
 
         return tokens;
     }

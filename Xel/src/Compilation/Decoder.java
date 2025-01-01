@@ -155,13 +155,13 @@ public class Decoder {
     }
 
     static NodeEXP EXP_checkValidity( String[] parts, TreeNode parentNode) throws CompilationError {
-        for(String part : parts){
-            if(OP_Types.containsKey(part))continue;
-            for(char ch : part.toCharArray()){
-                if(invalidNameChars.contains(ch) && ch != '(' && ch != ')' && ch != '.')
-                    throw new CompilationError(5);//CODE5
-            }
-        }
+//        for(String part : parts){
+//            if(OP_Types.containsKey(part))continue;
+//            for(char ch : part.toCharArray()){
+//                if(invalidNameChars.contains(ch) && ch != '(' && ch != ')' && ch != '.' && ch != '"')
+//                    throw new CompilationError(5);//CODE5
+//            }
+//        }
 
         return EXP_checkSyntax(parts, 0, parts.length, parentNode);
     }
@@ -251,6 +251,9 @@ public class Decoder {
                     return new NodeEXP(tokens[l], VAR, parentNode);
                 else if(extraKeys.contains(tokens[l]))
                     return new NodeEXP(tokens[l], LIT, parentNode);
+                else if(tokens[l].charAt(0) == '"' && tokens[l].length() > 1 && tokens[l].charAt(tokens[l].length()-1) == '"')
+                    return new NodeEXP(tokens[l], LIT, parentNode);
+                System.out.println(Arrays.toString(Arrays.copyOfRange(tokens,l,r)));
                 throw new CompilationError(9);//CODE9
             }
         }
