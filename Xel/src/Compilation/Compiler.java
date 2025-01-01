@@ -75,8 +75,7 @@ public class Compiler {
             case INPUT -> Decoder.INPUT_checkValidity(instruction, parentNode);
             case IF -> Decoder.IF_checkValidity(instruction, parentNode);
             case WHILE -> Decoder.WHILE_checkValidity(instruction,parentNode);
-            case CNT -> new NodeCMD(CNT, parentNode);
-            case BRK -> new NodeCMD(BRK, parentNode);
+            case CNT,BRK -> Decoder.NodeCMD(type, parentNode);
             case ELIF -> { // If the last statement was not NodeIF type, then we throw an error.
                 if(parentNode.getChildren().isEmpty() ||
                         !(parentNode.getChildren().get(parentNode.getChildren().size()-1) instanceof NodeIF))

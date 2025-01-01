@@ -1,6 +1,7 @@
 package Compilation.SyntaxTree;
 
 import Compilation.CompType;
+import Exceptions.CompilationError;
 
 public class NodeCMD extends TreeNode{
     private CompType commandType;
@@ -12,5 +13,26 @@ public class NodeCMD extends TreeNode{
 
     public CompType getCommandType() {
         return commandType;
+    }
+
+    @Override
+    public void execute() throws CompilationError {
+        switch (commandType){
+            case CNT -> {
+                TreeNode currNode = getParentNode();
+                while(!(currNode instanceof NodeWHILE)){
+                    currNode.exit = true;
+                    currNode = currNode.getParentNode();
+                }
+            }
+            case BRK -> {
+                TreeNode currNode = getParentNode();
+                while(!(currNode instanceof NodeWHILE)){
+                    currNode.exit = true;
+                    currNode = currNode.getParentNode();
+                }
+                currNode.exit = true;
+            }
+        }
     }
 }

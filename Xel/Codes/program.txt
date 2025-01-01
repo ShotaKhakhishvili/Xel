@@ -2,11 +2,12 @@ int a
 input "Input num: " a
 int i = 2
 bool answer = true;
-while(i < a){
-    print i
-    continue
+while i < a{
     i++;
+    print i;
+    print a
 }
+print i
 if (answer == true)
     print "number is prime"
 else

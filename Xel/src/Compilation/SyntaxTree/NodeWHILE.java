@@ -14,6 +14,7 @@ public class NodeWHILE extends TreeNode{
 
     @Override
     public void execute() throws CompilationError {
+        exit = false;
         while(Variable.strToBool(statement.evaluate().value.toString()) && !exit)
             getChildren().get(0).execute();
     }

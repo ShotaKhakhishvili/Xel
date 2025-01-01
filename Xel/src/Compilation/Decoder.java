@@ -367,14 +367,17 @@ public class Decoder {
         boolean b = switch (cmd){
             case CNT,BRK ->{
                 TreeNode parent = parentNode;
-                while(parent.getParentNode() != null){
+                while(parent != null){
                     if(parent instanceof NodeWHILE)
                         yield true;
+                    parent = parent.getParentNode();
                 }
                 yield false;
             }
             default -> false;
         };
+        if(b)
+            return new NodeCMD(cmd, parentNode);
         switch (cmd){
             case CNT -> throw new CompilationError(23);
             case BRK -> throw new CompilationError(24);
