@@ -27,10 +27,10 @@ public class Main {
         parser.readFile();
         Pair<String[],Integer>[] instructions = LinesToInstructions.getInstructions(parser.getLines());
 
-        for(Pair<String[],Integer> pair : instructions){
-            String instruction = Arrays.toString(pair.getFirst());
-            System.out.println("Line " + pair.getSecond() + ": " + instruction);
-        }
+//        for(Pair<String[],Integer> pair : instructions){
+//            String instruction = Arrays.toString(pair.getFirst());
+//            System.out.println("Line " + pair.getSecond() + ": " + instruction);
+//        }
 
         // ANSI escape code for red text
         final String RED = "\033[0;31m";

@@ -1,14 +1,5 @@
-int a
-input "Input num: " a
-int i = 2
-bool answer = true;
-while i < a{
-    i++;
-    print i;
-    print a
-}
-print i
-if (answer == true)
-    print "number is prime"
-else
-    print "number is not prime"
+int mid
+input "input a middle number: " mid
+for (int i = 0,j = mid; i <= j; i++, j--)
+    print " i: " + i + " j: " + j
+print "Done."

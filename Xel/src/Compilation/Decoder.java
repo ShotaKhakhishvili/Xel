@@ -3,6 +3,7 @@ package Compilation;
 import Compilation.SyntaxTree.*;
 import Exceptions.CompilationError;
 import Extra.Functions;
+import Extra.Pair;
 import org.w3c.dom.Node;
 
 import java.util.*;
@@ -123,7 +124,7 @@ public class Decoder {
         return INVALID;
     }
 
-    static TreeNode DECL_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
+    static NodeDECL DECL_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
         String[][] declarations = Functions.declarationSeperator(Arrays.copyOfRange(tokens,1,tokens.length));
         String[] variables = new String[declarations.length];
         NodeEXP[] initExps = new NodeEXP[declarations.length];
@@ -361,6 +362,70 @@ public class Decoder {
         NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode);
 
         return new NodeWHILE(statement, parentNode);
+    }
+
+    static NodeFOR FOR_checkValidity (String[] tokens, TreeNode parentNode) throws CompilationError {
+        if(tokens.length < 4)
+            throw new CompilationError(25);
+        if(!tokens[1].equals("(") || !tokens[tokens.length-1].equals(")"))
+            throw new CompilationError(26);
+
+        List<String>[] instructionParts = new ArrayList[2];
+
+        tokens = Arrays.copyOfRange(tokens,2, tokens.length-1);
+
+        int j = 0;
+        int i = 0;
+        for(; i < 2; i++){
+            instructionParts[i] = new ArrayList<>();
+            while(j < tokens.length){
+                if(tokens[j].equals(";")){
+                    j++;
+                    break;
+                }
+                instructionParts[i].add(tokens[j]);
+                j++;
+            }
+            if(j == tokens.length)
+                break;
+        }
+
+        if(i == 0)
+            throw new CompilationError(25);
+
+        List<List<String>> instructinList = new ArrayList<>();
+        while(j < tokens.length){
+            List<String> instruction = new ArrayList<>();
+            while(j < tokens.length){
+                if(tokens[j].equals(",")) {
+                    j++;
+                    break;
+                }
+                instruction.add(tokens[j]);
+                j++;
+            }
+            if (!instruction.isEmpty()) {
+                instructinList.add(instruction);
+            }
+        }
+
+
+        NodeFOR result = new NodeFOR(parentNode);
+
+        NodeDECL declarations = DECL_checkValidity(instructionParts[0].toArray(new String[0]), result);
+        NodeEXP statement = EXP_checkValidity(instructionParts[1].toArray(new String[0]), result);
+
+        result.setDeclarations(declarations);
+        result.setStatement(statement);
+
+        NodeASGM[] assignments = new NodeASGM[instructinList.size()];
+
+        for(int k = 0; k < instructinList.size(); k++)
+            assignments[k] = ASGM_checkValidity(instructinList.get(k).toArray(new String[0]), result);
+
+        result.setAssignments(assignments);
+
+        return result;
     }
 
     static NodeCMD NodeCMD(CompType cmd, TreeNode parentNode) throws CompilationError {

@@ -16,4 +16,12 @@ public class Pair<T,R> {
     public R getSecond() {
         return second;
     }
+
+    public void setFirst(T first) {
+        this.first = first;
+    }
+
+    public void setSecond(R second) {
+        this.second = second;
+    }
 }

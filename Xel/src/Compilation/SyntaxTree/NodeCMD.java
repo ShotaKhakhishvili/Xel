@@ -20,14 +20,14 @@ public class NodeCMD extends TreeNode{
         switch (commandType){
             case CNT -> {
                 TreeNode currNode = getParentNode();
-                while(!(currNode instanceof NodeWHILE)){
+                while(!(currNode instanceof NodeLOOP)){
                     currNode.exit = true;
                     currNode = currNode.getParentNode();
                 }
             }
             case BRK -> {
                 TreeNode currNode = getParentNode();
-                while(!(currNode instanceof NodeWHILE)){
+                while(!(currNode instanceof NodeLOOP)){
                     currNode.exit = true;
                     currNode = currNode.getParentNode();
                 }

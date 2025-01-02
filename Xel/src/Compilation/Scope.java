@@ -51,6 +51,10 @@ public class Scope {
         return parentScope;
     }
 
+    public void setParentScope(Scope parentScope) {
+        this.parentScope = parentScope;
+    }
+
     public Memory getMemory() {
         return memory;
     }

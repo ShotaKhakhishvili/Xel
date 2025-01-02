@@ -103,7 +103,10 @@ public interface Functions {
 
         for (int i = 0; i < tokens.size(); i++) {
             String token = tokens.get(i);
-            if (token.equals(";")) {
+
+            // We group the instruction as a new one if we see ';' and its not a for statement
+            if (token.equals(";") && (instructions.isEmpty() ||
+                    !(instructions.get(instructions.size()-1).size() == 1 && instructions.get(instructions.size()-1).get(0).equals("for")))) {
                 // End the current instruction (discard ";")
                 if (!current.isEmpty()) {
                     instructions.add(new ArrayList<>(current));
@@ -126,7 +129,6 @@ public interface Functions {
             }
             else {
                 current.add(token);
-
 
                 // This is for edge cases, where we require expressions to be separated from statements after it that are on the same line
                 // example: else if (a > b) a++
@@ -182,6 +184,7 @@ public interface Functions {
             if(current.get(0).equals("print")) return true;
             if(current.get(0).equals("input")) return true;
             if(current.get(0).equals("while")) return true;
+            if(current.get(0).equals("for")) return true;
         }
         if(current.size() == 3){
             if(current.get(0).equals("else") && current.get(1).equals("if")) return true;
@@ -192,12 +195,13 @@ public interface Functions {
    static List<String> polishBracketedStatement(List<String> current){
         if(current.get(0).equals("else") && current.get(1).equals("if")){
             current.remove(2);
+            current.remove(current.size()-1);
         }
         else if(current.get(0).equals("if") || current.get(0).equals("print") ||
                 current.get(0).equals("input") || current.get(0).equals("else") || current.get(0).equals("while") ){
             current.remove(1);
+            current.remove(current.size()-1);
         }
-       current.remove(current.size()-1);
        return current;
    }
 }

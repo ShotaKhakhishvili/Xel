@@ -30,6 +30,8 @@ public class CompilationError extends Throwable {
         put(22,"Else If Statement Without An If Statement [Error Code 22]");
         put(23,"Continue Statement Needs To Be Inside A Loop [Error Code 23]");
         put(24,"Break Statement Needs To Be Inside A Loop [Error Code 24]");
+        put(25,"Invalid For Statement [Error Code 25]");
+        put(26,"For Statement Requires Brackets [Error Code 26]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);
