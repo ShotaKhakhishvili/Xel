@@ -5,7 +5,7 @@ import java.util.*;
 public interface Functions {
     // Define known multi-character operators (extend as needed)
     Set<String> MULTI_CHAR_OPERATORS = new HashSet<>(Arrays.asList(
-            "&&", "||", "++", "--", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">=", "<="
+            "&&", "||", "++", "--", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">=", "<=", "//"
     ));
 
     // Define known single-character operators/punctuation (extend as needed)
@@ -104,6 +104,12 @@ public interface Functions {
         for (int i = 0; i < tokens.size(); i++) {
             String token = tokens.get(i);
 
+            if(token.equals("//")){
+                if(!current.isEmpty())
+                    instructions.add(new ArrayList<>(current));
+                return instructions;
+            }
+
             // We group the instruction as a new one if we see ';' and its not a for statement
             if (token.equals(";") && (instructions.isEmpty() ||
                     !(instructions.get(instructions.size()-1).size() == 1 && instructions.get(instructions.size()-1).get(0).equals("for")))) {
@@ -146,7 +152,7 @@ public interface Functions {
                         if(i < tokens.size())
                             current.add(tokens.get(i));
                     }
-                    instructions.add(new ArrayList<>(polishBracketedStatement(current)));
+                    instructions.add(new ArrayList<>(current));
                     current.clear();
                 }
             }

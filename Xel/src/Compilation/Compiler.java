@@ -85,7 +85,7 @@ public class Compiler {
             }
             case ELSE -> {// If the last statement was not NodeIF type, then we throw an error.
                 if(parentNode.getChildren().isEmpty() ||  !(parentNode.getChildren().get(parentNode.getChildren().size()-1) instanceof NodeIF))
-                    throw new CompilationError(22);
+                    throw new CompilationError(32);
                 // Otherwise, we make a "else true" kind of if statement, that would always execute if previous if statements failed.
                 yield new NodeIF(new NodeEXP("true",LIT,parentNode),parentNode);
             }

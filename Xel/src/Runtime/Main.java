@@ -27,10 +27,10 @@ public class Main {
         parser.readFile();
         Pair<String[],Integer>[] instructions = LinesToInstructions.getInstructions(parser.getLines());
 
-//        for(Pair<String[],Integer> pair : instructions){
-//            String instruction = Arrays.toString(pair.getFirst());
-//            System.out.println("Line " + pair.getSecond() + ": " + instruction);
-//        }
+        for(Pair<String[],Integer> pair : instructions){
+            String instruction = Arrays.toString(pair.getFirst());
+            System.out.println("Line " + pair.getSecond() + ": " + instruction);
+        }
 
         // ANSI escape code for red text
         final String RED = "\033[0;31m";
@@ -38,10 +38,6 @@ public class Main {
         final String GREEN = "\033[1;32m";
         // ANSI escape code to reset color
         final String RESET = "\033[0m";
-
-        List<List<String>> matrix = new ArrayList<>();
-
-        String[][] nes = matrix.stream().map(l -> new String[0]).toArray(String[][]::new);
 
         try{
             long compileStart = System.currentTimeMillis();

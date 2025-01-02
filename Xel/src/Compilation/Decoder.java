@@ -6,6 +6,7 @@ import Extra.Functions;
 import Extra.Pair;
 import org.w3c.dom.Node;
 
+import javax.swing.*;
 import java.util.*;
 import java.util.function.BinaryOperator;
 
@@ -134,6 +135,8 @@ public class Decoder {
             String[] declaration = declarations[i];
             variables[i] = declaration[0];
 
+            if(parentNode.getScope().containsVariable(declaration[0]))
+                throw new CompilationError(1);
             if(!invalidNameChars.contains(declaration[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0'))
                 parentNode.getScopeMemory().declareVariable(declaration[0], String.valueOf(Variable.getDefaultValue(varType)), varType);
             else
@@ -255,6 +258,26 @@ public class Decoder {
                 throw new CompilationError(9);//CODE9
             }
         }
+        // Increment/Decrement operations inside expressions. They require brackets
+        // Example : (++a) + 3
+        // Example : 10 * 7 - (a--)
+        if(r - l == 2) {
+            if(tokens[l].equals("--") || tokens[l].equals("++")) {
+                if (!parentNode.getScope().containsVariable(tokens[l + 1]))
+                    throw new CompilationError(tokens[l].equals("--") ? 34 : 33);
+                if(tokens[l].equals("--"))
+                    return new NodeEXP(tokens[l+1],PREDEC,parentNode);
+                return new NodeEXP(tokens[l+1],PREINC,parentNode);
+            }
+            if(tokens[l+1].equals("--") || tokens[l+1].equals("++")) {
+                if (!parentNode.getScope().containsVariable(tokens[l]))
+                    throw new CompilationError(tokens[l+1].equals("--") ? 34 : 33);
+                if(tokens[l+1].equals("--"))
+                    return new NodeEXP(tokens[l],POSDEC,parentNode);
+                return new NodeEXP(tokens[l],POSINC,parentNode);
+            }
+        }
+
         switch (tokens[l]) {
             case "!" -> {
                 String[] newSequence = new String[r - l + 1];
@@ -316,22 +339,31 @@ public class Decoder {
     }
 
     static NodePRINT PRINT_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
-        return new NodePRINT(EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode),parentNode);
+        if(tokens.length <= 3)
+            throw new CompilationError(27);
+        if(!tokens[1].equals("(") || !tokens[tokens.length-1].equals(")"))
+            throw new CompilationError(26);
+        return new NodePRINT(EXP_checkValidity(Arrays.copyOfRange(tokens,2,tokens.length-1), parentNode),parentNode);
     }
 
     static NodeINPUT INPUT_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError{
+        if(tokens.length < 3)
+            throw new CompilationError(15);
+        if(!tokens[1].equals("(") || !tokens[tokens.length-1].equals(")"))
+            throw new CompilationError(26);
+        if(tokens.length == 3)
+            throw new CompilationError(28);
+
         String printString = "";
-        int i = 1;
-        if(tokens[1].charAt(0) == '"' && tokens[1].charAt(tokens[1].length()-1) == '"') {
-            printString = tokens[1].substring(1,tokens[1].length()-1);
+        int i = 2;
+        if(tokens[2].charAt(0) == '"' && tokens[2].charAt(tokens[2].length()-1) == '"') {
+            printString = tokens[2].substring(1,tokens[2].length()-1);
             i++;
         }
-        if(tokens.length == i)
-            throw new CompilationError(14);
 
         List<String> varNames = new ArrayList<>();
 
-        while(i < tokens.length){
+        while(i < tokens.length-1){
             if(tokens[i].equals(",")){
                 i++;
                 continue;
@@ -344,16 +376,29 @@ public class Decoder {
             i++;
         }
 
+        if(varNames.isEmpty())
+            throw new CompilationError(29);
+
         return new NodeINPUT(printString, varNames.toArray(new String[0]), parentNode);
     }
 
     static NodeIF IF_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
-        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,1,tokens.length), parentNode);
+        if(tokens.length < 3)
+            throw new CompilationError(30);
+        if(!tokens[1].equals("(") || !tokens[tokens.length-1].equals(")"))
+            throw new CompilationError(26);
+
+        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,2,tokens.length-1), parentNode);
 
         return new NodeIF(statement,  parentNode);
     }
     static NodeIF ELSEIF_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {
-        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,2,tokens.length), parentNode);
+        if(tokens.length < 4)
+            throw new CompilationError(31);
+        if(!tokens[2].equals("(") || !tokens[tokens.length-1].equals(")"))
+            throw new CompilationError(26);
+
+        NodeEXP statement = EXP_checkValidity(Arrays.copyOfRange(tokens,3,tokens.length-1), parentNode);
 
         return new NodeIF(statement,  parentNode);
     }
@@ -409,11 +454,20 @@ public class Decoder {
             }
         }
 
-
         NodeFOR result = new NodeFOR(parentNode);
 
-        NodeDECL declarations = DECL_checkValidity(instructionParts[0].toArray(new String[0]), result);
-        NodeEXP statement = EXP_checkValidity(instructionParts[1].toArray(new String[0]), result);
+        NodeDECL declarations;
+
+        if(!instructionParts[0].isEmpty())
+            declarations = DECL_checkValidity(instructionParts[0].toArray(new String[0]), result);
+        else
+            declarations = new NodeDECL(INVALID,new NodeEXP[0],new String[0],result);
+
+        NodeEXP statement;
+        if(!instructionParts[1].isEmpty())
+            statement = EXP_checkValidity(instructionParts[1].toArray(new String[0]), result);
+        else
+            statement = new NodeEXP("true",LIT,result);
 
         result.setDeclarations(declarations);
         result.setStatement(statement);

@@ -1,5 +1,3 @@
-int mid
-input "input a middle number: " mid
-for (int i = 0,j = mid; i <= j; i++, j--)
-    print " i: " + i + " j: " + j
-print "Done."
+int a = 3
+int b = 3 + ++a + ++a
+print (b)

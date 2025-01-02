@@ -20,7 +20,7 @@ public class CompilationError extends Throwable {
         put(12,"Unknown Assignment Operator [Error Code 12]");
         put(13,"Illegal Scope Closing Detected [Error Code 13]");
         put(14,"Not Enough Parameters For An Input Statement[Error Code 14]");
-        put(15,"Illegal Input Statement [Error Code 15]");
+        put(15,"Invalid Input Statement [Error Code 15]");
         put(16,"Invalid Boolean Expression [Error Code 16]");
         put(17,"Extra Symbols On An Increment Operation [Error Code 17]");
         put(18,"Extra Symbols On A Decrement Operation [Error Code 18]");
@@ -31,7 +31,15 @@ public class CompilationError extends Throwable {
         put(23,"Continue Statement Needs To Be Inside A Loop [Error Code 23]");
         put(24,"Break Statement Needs To Be Inside A Loop [Error Code 24]");
         put(25,"Invalid For Statement [Error Code 25]");
-        put(26,"For Statement Requires Brackets [Error Code 26]");
+        put(26,"Brackets Were Expected [Error Code 26]");
+        put(27,"Invalid Print Statement [Error Code 27]");
+        // 28
+        put(29,"Empty Input Statement [Error Code 29]");
+        put(30,"Invalid If Statement [Error Code 30]");
+        put(31,"Invalid Else-If Statement [Error Code 31]");
+        put(32,"Else Statement Without An If Statement [Error Code 32]");
+        put(33,"Invalid Increment Inside Expression [Error Code 33]");
+        put(34,"Invalid Decrement Inside Expression [Error Code 34]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

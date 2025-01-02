@@ -42,9 +42,36 @@ public class NodeEXP extends TreeNode {
             return Decoder.BIOP_Functions.get(type).apply(evalL,evalR);
         }
 
+        if(type != VAR && type != LIT){
+            Variable<?> current = getScope().getVariable(value);
+            Variable<?> oneVal = new Variable<>("1",INT);
+            switch (type){
+                case PREDEC -> {
+                    Variable<?> val = current.sub(oneVal);
+                    getScope().setVariable(value, val.value.toString());
+                    return val;
+                }
+                case PREINC -> {
+                    Variable<?> val = current.add(oneVal);
+                    getScope().setVariable(value, val.value.toString());
+                    return val;
+                }
+                case POSDEC -> {
+                    Variable<?> val = new Variable<>(current.value.toString(), current.getType());
+                    getScope().setVariable(value, current.sub(oneVal).value.toString());
+                    return val;
+                }
+                case POSINC -> {
+                    Variable<?> val = new Variable<>(current.value.toString(), current.getType());
+                    getScope().setVariable(value, current.add(oneVal).value.toString());
+                    return val;
+                }
+            }
+        }
+
         String val = getValue();
 
-        if(type == VAR) {
+        if(type == VAR){
             Variable<?> var = getScope().getVariable(value);
             return new Variable<>(var.value.toString(), var.getType());
         }

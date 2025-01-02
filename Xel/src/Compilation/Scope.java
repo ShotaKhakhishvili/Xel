@@ -31,7 +31,7 @@ public class Scope {
         getOwnerMemory(varName).setVariable(varName,value);
     }
 
-    public Variable getVariable(String varName) throws CompilationError {
+    public Variable<?> getVariable(String varName) throws CompilationError {
         return getOwnerMemory(varName).getVariable(varName);
     }
 

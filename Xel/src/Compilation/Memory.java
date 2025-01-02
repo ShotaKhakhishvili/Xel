@@ -19,9 +19,6 @@ public class Memory {
     private final Map<String,Functions> functions = new HashMap<>();
 
     public void declareVariable(String varName, String varValue, CompType varType) throws CompilationError {
-        if(owner.containsVariable(varName))
-            throw new CompilationError(1);//CODE1
-
         vars.put(varName,new Variable<>(varValue, varType));
 
         setVariable(varName, varValue);

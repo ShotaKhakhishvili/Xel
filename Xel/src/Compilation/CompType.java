@@ -37,7 +37,7 @@ public enum CompType {
     AND,OR,GRE,LE,EQ,NEQ,GEQ,LEQ,NOT,  // Boolean Expressions
     ADD,SUB,MULT,DIV,MOD,POW,   // Used for expressions and for assignments
     INC,DEC,                    // Increment/Decrement fo assignments
-
+    PREINC, POSINC, PREDEC, POSDEC,         // Pre/Post Increment/Decrements
     INVALID,
 }
 
