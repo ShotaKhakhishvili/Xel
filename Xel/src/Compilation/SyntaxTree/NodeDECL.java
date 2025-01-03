@@ -1,7 +1,6 @@
 package Compilation.SyntaxTree;
 
 import Compilation.CompType;
-import Compilation.Variable;
 import Exceptions.CompilationError;
 
 public class NodeDECL extends TreeNode {
@@ -19,7 +18,7 @@ public class NodeDECL extends TreeNode {
     @Override
     public void execute() throws CompilationError {
         for(int i = 0; i < varInits.length; i++){
-            getScopeMemory().declareVariable(varNames[i], varInits[i].evaluate().value.toString(), varType);
+            getScopeMemory().declareVariable(varNames[i], varInits[i].evaluate().getValue(), varType);
         }
     }
 }

@@ -1,12 +1,10 @@
 package Compilation;
 
+import Compilation.DataTypes.Variable;
 import Compilation.SyntaxTree.*;
 import Exceptions.CompilationError;
 import Extra.Functions;
-import Extra.Pair;
-import org.w3c.dom.Node;
 
-import javax.swing.*;
 import java.util.*;
 import java.util.function.BinaryOperator;
 
@@ -94,7 +92,7 @@ public class Decoder {
             put("if", IF);
             put("while", WHILE);
             put("for", FOR);
-            put("func", FDEC);
+            put("func", FDECL);
             put("print", PRINT);
             put("input", INPUT);
             put("break", BRK);
@@ -135,10 +133,10 @@ public class Decoder {
             String[] declaration = declarations[i];
             variables[i] = declaration[0];
 
-            if(parentNode.getScope().containsVariable(declaration[0]))
+            if(parentNode.getScopeMemory().containsVariable(declaration[0]))
                 throw new CompilationError(1);
             if(!invalidNameChars.contains(declaration[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0'))
-                parentNode.getScopeMemory().declareVariable(declaration[0], String.valueOf(Variable.getDefaultValue(varType)), varType);
+                parentNode.getScopeMemory().declareVariable(declaration[0], Variable.getDefaultValue(varType), varType);
             else
                 throw new CompilationError(0);
 
@@ -253,6 +251,8 @@ public class Decoder {
                     return new NodeEXP(tokens[l], VAR, parentNode);
                 else if(tokens[l].charAt(0) == '"' && tokens[l].length() > 1 && tokens[l].charAt(tokens[l].length()-1) == '"')
                     return new NodeEXP(tokens[l], LIT, parentNode);
+                else if(tokens[l].charAt(0) == '\'' && tokens[l].length() > 1 && tokens[l].charAt(tokens[l].length()-1) == '\'' && tokens[l].length() < 4)
+                    return new NodeEXP(tokens[l], LIT, parentNode);
                 else if(Variable.boolKeys.containsKey(tokens[l]) || Variable.longKeys.containsKey(tokens[l]) || Variable.doubleKeys.containsKey(tokens[l]))
                     return new NodeEXP(tokens[l], LIT, parentNode);
                 throw new CompilationError(9);//CODE9
@@ -277,7 +277,20 @@ public class Decoder {
                 return new NodeEXP(tokens[l],POSINC,parentNode);
             }
         }
-
+        if(r - l >= 2){
+            if(tokens[r-1].equals("]")){
+                int brackCnt = 1;
+                for(int i = r-2; i >= l; i--){
+                    if(tokens[i].equals("["))
+                        brackCnt--;
+                    if(tokens[i].equals("]"))
+                        brackCnt++;
+                    if (brackCnt == 0)
+                        break;
+                    i--;
+                }
+            }
+        }
         switch (tokens[l]) {
             case "!" -> {
                 String[] newSequence = new String[r - l + 1];
@@ -368,10 +381,8 @@ public class Decoder {
                 i++;
                 continue;
             }
-            if(!parentNode.getScope().containsVariable(tokens[i])){
-                System.out.println(tokens[i]);
+            if(!parentNode.getScope().containsVariable(tokens[i]))
                 throw new CompilationError(15);
-            }
             varNames.add(tokens[i]);
             i++;
         }

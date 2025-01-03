@@ -1,6 +1,7 @@
 package Compilation.SyntaxTree;
 
 import Compilation.*;
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
 
@@ -29,7 +30,7 @@ public class NodeEXP extends TreeNode {
 
             Variable<?> evalR = right.evaluate();
 
-            if(evalR.value.toString().equals("0") || evalR.value.toString().equals("0.0"))
+            if(evalR.getValue().toString().equals("0") || evalR.getValue().toString().equals("0.0"))
             {
                 if(expType == MOD)
                     throw new RuntimeError(204);
@@ -48,22 +49,22 @@ public class NodeEXP extends TreeNode {
             switch (type){
                 case PREDEC -> {
                     Variable<?> val = current.sub(oneVal);
-                    getScope().setVariable(value, val.value.toString());
+                    getScope().setVariable(value, val.getValue());
                     return val;
                 }
                 case PREINC -> {
                     Variable<?> val = current.add(oneVal);
-                    getScope().setVariable(value, val.value.toString());
+                    getScope().setVariable(value, val.getValue());
                     return val;
                 }
                 case POSDEC -> {
-                    Variable<?> val = new Variable<>(current.value.toString(), current.getType());
-                    getScope().setVariable(value, current.sub(oneVal).value.toString());
+                    Variable<?> val = new Variable<>(current.getValue(), current.getType());
+                    getScope().setVariable(value, current.sub(oneVal).getValue());
                     return val;
                 }
                 case POSINC -> {
-                    Variable<?> val = new Variable<>(current.value.toString(), current.getType());
-                    getScope().setVariable(value, current.add(oneVal).value.toString());
+                    Variable<?> val = new Variable<>(current.getValue(), current.getType());
+                    getScope().setVariable(value, current.add(oneVal).getValue());
                     return val;
                 }
             }
@@ -73,11 +74,15 @@ public class NodeEXP extends TreeNode {
 
         if(type == VAR){
             Variable<?> var = getScope().getVariable(value);
-            return new Variable<>(var.value.toString(), var.getType());
+            if(var.getType() == CHAR)
+                new Variable<>((char) var.getValue(), var.getType());
+            return new Variable<>(var.getValue(), var.getType());
         }
 
         if(val.charAt(0) == '"')
             return new Variable<>(val.substring(1,val.length()-1), STRING);
+        if(val.charAt(0) == '\'')
+            return new Variable<>(val.charAt(1), CHAR);
 
         long longValue = Variable.strToLong(val);
 

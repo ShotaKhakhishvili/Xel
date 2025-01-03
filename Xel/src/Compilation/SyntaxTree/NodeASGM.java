@@ -1,7 +1,7 @@
 package Compilation.SyntaxTree;
 
 import Compilation.CompType;
-import Compilation.Variable;
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
 
 import java.util.function.BinaryOperator;
@@ -23,13 +23,12 @@ public class NodeASGM extends TreeNode {
 
     @Override
     public void execute() throws CompilationError {
-        String val = String.valueOf(exp.evaluate().value);
         if(type == ASGM)
-            getScope().setVariable(varName, val);
+            getScope().setVariable(varName, exp.evaluate().getValue());
         else{
             BinaryOperator<Variable<?>> binaryOperator = BIOP_Functions.get(type);
             Variable<?> newValue = binaryOperator.apply(getScope().getVariable(varName), exp.evaluate());
-            getScope().setVariable(varName, newValue.value.toString());
+            getScope().setVariable(varName, newValue.getValue().toString());
         }
     }
 }

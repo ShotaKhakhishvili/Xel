@@ -1,5 +1,6 @@
-package Compilation;
+package Compilation.DataTypes;
 
+import Compilation.CompType;
 import Exceptions.RuntimeError;
 
 import java.util.Arrays;
@@ -9,7 +10,7 @@ import java.util.Map;
 import static Compilation.CompType.*;
 
 public class Variable<T>{
-    public T value;
+    private T value;
     private final CompType type;
 
     public static final Map<String,Boolean> boolKeys = new HashMap<>(){{
@@ -36,7 +37,7 @@ public class Variable<T>{
 
     private static final CompType[][] varTypeClasses = new CompType[][]{
             {
-                    BOOL,CHAR,BYTE,SHORT,INT,LONG
+                    BOOL,BYTE,SHORT,INT,LONG,CHAR
             },
             
             {
@@ -47,6 +48,7 @@ public class Variable<T>{
     public static Object getDefaultValue(CompType type) {
         return switch (type) {
             case BOOL -> false;
+            case CHAR -> '?';
             case BYTE -> (byte) 0;
             case SHORT -> (short) 0;
             case INT -> 0;
@@ -58,25 +60,46 @@ public class Variable<T>{
         };
     }
 
-    public Variable(T value, CompType type) {
-        this.value = value;
+    public Variable(CompType type) {
         this.type = type;
+    }
+
+    public Variable(T value,CompType type) {
+        this.type = type;
+        this.value = value;
     }
 
     public CompType getType() {
         return type;
     }
 
-    public void setValue(String value) {
+    public void setValue(Object val) {
+        String value = val.toString();
+
+        if(val instanceof Character){
+            if(type != STRING)
+                value = String.valueOf(Long.valueOf((char) val));
+        }
+        else{
+            if(type == CHAR){
+                if(val instanceof String) {
+                    if(((String) val).length() > 1)
+                        throw new RuntimeError(210);
+                    value = (String.valueOf((long) ((String) val).charAt(0)));
+                }
+                else
+                    value = String.valueOf((long)val);
+            }
+        }
         switch (type){
-            case BOOL -> this.value = (T)String.valueOf(Variable.strToBool(value));
-            case CHAR -> this.value = (T)String.valueOf((char)Variable.strToLong(value));
-            case BYTE -> this.value = (T)String.valueOf((byte)Variable.strToLong(value));
-            case SHORT -> this.value = (T)String.valueOf((short)Variable.strToLong(value));
-            case INT -> this.value = (T)String.valueOf((int)Variable.strToLong(value));
-            case LONG -> this.value = (T)String.valueOf(Variable.strToLong(value));
-            case FLOAT -> this.value = (T)String.valueOf((float)Variable.strToDouble(value));
-            case DOUBLE -> this.value = (T)String.valueOf(Variable.strToDouble(value));
+            case BOOL -> this.value = (T)((Boolean)Variable.strToBool(value));
+            case CHAR -> this.value = (T)Character.valueOf((char)Byte.parseByte(value));
+            case BYTE -> this.value = (T)(Byte)(byte)Variable.strToLong(value);
+            case SHORT -> this.value = (T)(Short)(short)Variable.strToLong(value);
+            case INT -> this.value = (T)(Integer)(int)(Variable.strToLong(value));
+            case LONG -> this.value = (T)(Long)Variable.strToLong(value);
+            case FLOAT -> this.value = (T)(Float)(float)Variable.strToDouble(value);
+            case DOUBLE -> this.value = (T)(Double)(Variable.strToDouble(value));
             case STRING -> this.value = (T)value;
         }
     }
@@ -86,7 +109,7 @@ public class Variable<T>{
         CompType otherType = other.getType();
 
         if(thisType.equals(STRING) || otherType.equals(STRING))
-            return new Variable<>(String.valueOf(value) + other.value, STRING);
+            return new Variable<>(value.toString() + other.value, STRING);
 
         return castNumToAppropriate(getDoubleValue(this) + getDoubleValue(other), thisType, otherType);
     }
@@ -149,7 +172,7 @@ public class Variable<T>{
         return castNumToAppropriate(Math.pow(getDoubleValue(this), getDoubleValue(other)), thisType, otherType);
     }
 
-    public Variable<Boolean> binaries(Variable<?> other, CompType type){
+    public Variable<?> binaries(Variable<?> other, CompType type){
         CompType thisType = this.getType();
         CompType otherType = other.getType();
 
@@ -200,7 +223,15 @@ public class Variable<T>{
     }
 
     private static double getDoubleValue(Variable<?> a){
-        return a.getType() == BOOL ? (String.valueOf(a.value).equals("true") ? 1 : 0) : Double.parseDouble(String.valueOf(a.value));
+        if(a.value instanceof Character)
+            return Long.valueOf((Character)a.value);
+        try{
+            return a.getType() == BOOL ? (String.valueOf(a.value).equals("true") ? 1 : 0) : Double.parseDouble(String.valueOf(a.value));
+        }catch (NumberFormatException e){
+            if(a.value.toString().length() == 1)
+                return a.value.toString().charAt(0);
+            throw new RuntimeError(208);
+        }
     }
 
     private static Variable<?> castNumToAppropriate(Double num, CompType a, CompType b){
@@ -238,6 +269,7 @@ public class Variable<T>{
     }
 
     public static long strToLong(String str){
+        if(str.isEmpty()) return 0;
         if(boolKeys.containsKey(str))
             return boolKeys.get(str)? 1L : 0L;
         if(longKeys.containsKey(str))
@@ -256,6 +288,7 @@ public class Variable<T>{
     }
 
     public static double strToDouble(String str){
+        if(str.isEmpty()) return 0;
         if(boolKeys.containsKey(str))
             return boolKeys.get(str)? 1 : 0;
         if(longKeys.containsKey(str))
@@ -265,11 +298,17 @@ public class Variable<T>{
         try {
             return Double.parseDouble(str);
         } catch (NumberFormatException e) {
+            if(str.length() == 1)
+                return str.charAt(0);
             throw new RuntimeError(206);//CODE206
         }
     }
 
+    public T getValue() {
+        return value;
+    }
+
     public static boolean strToBool(String str){
-        return strToLong(str) == 1;
+        return !str.isEmpty() && strToLong(str) == 1;
     }
 }

@@ -1,15 +1,13 @@
 package Compilation;
 
+import Compilation.DataTypes.Variable;
+import Compilation.DataTypes.MultiDimArray;
 import Exceptions.CompilationError;
 
 import java.util.*;
-import java.util.concurrent.CompletionException;
-
-import static Compilation.CompType.*;
 
 public class Memory {
-    private final Set<String> variables = new HashSet<>();
-    private final Map<String,Variable<?>> vars = new HashMap<>();
+    private final Map<String, Variable<?>> vars = new HashMap<>();
     private final Scope owner;
 
     public Memory(Scope owner){
@@ -18,18 +16,16 @@ public class Memory {
 
     private final Map<String,Functions> functions = new HashMap<>();
 
-    public void declareVariable(String varName, String varValue, CompType varType) throws CompilationError {
+    public <T> void declareVariable(String varName, T varValue, CompType varType) throws CompilationError {
         vars.put(varName,new Variable<>(varValue, varType));
-
         setVariable(varName, varValue);
-        variables.add(varName);
     }
 
     public Variable<?> getVariable(String varName) {
         return vars.get(varName);
     }
 
-    public void setVariable(String varName, String value) {
+    public void setVariable(String varName, Object value) {
         vars.get(varName).setValue(value);
     }
 
@@ -45,8 +41,11 @@ public class Memory {
         return vars;
     }
 
+    public boolean containsVariable(String varName){
+        return vars.containsKey(varName);
+    }
+
     public void delete(){
         vars.clear();
-        variables.clear();
     }
 }

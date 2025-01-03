@@ -1,7 +1,6 @@
 package Compilation.SyntaxTree;
 
-import Compilation.Scope;
-import Compilation.Variable;
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
 
 public class NodeFOR extends NodeLOOP{
@@ -25,7 +24,7 @@ public class NodeFOR extends NodeLOOP{
         getScopeMemory().delete();
         exit = false;
         declarations.execute();
-        while(Variable.strToBool(statement.evaluate().value.toString())){
+        while(Variable.strToBool(statement.evaluate().getValue().toString())){
             getChildren().get(0).execute();
             if(exit)break;
             for(NodeASGM asgm : assignments)

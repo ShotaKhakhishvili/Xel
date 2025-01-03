@@ -1,3 +1,10 @@
-int a = 3
-int b = 3 + ++a + ++a
-print (b)
+char b = "a"
+b+=2
+int a = b + 10
+string str = '1' + 1
+print(str)
+print(b + " " + a)
+if(b == 'b')
+    print("yup")
+else
+    print("nope")

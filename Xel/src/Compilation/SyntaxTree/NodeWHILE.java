@@ -1,6 +1,6 @@
 package Compilation.SyntaxTree;
 
-import Compilation.Variable;
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
 
 public class NodeWHILE extends NodeLOOP{
@@ -12,7 +12,7 @@ public class NodeWHILE extends NodeLOOP{
     @Override
     public void execute() throws CompilationError {
         exit = false;
-        while(Variable.strToBool(statement.evaluate().value.toString()) && !exit)
+        while(Variable.strToBool(statement.evaluate().getValue().toString()) && !exit)
             getChildren().get(0).execute();
     }
 }

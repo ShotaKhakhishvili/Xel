@@ -79,6 +79,17 @@ public interface Functions {
                 continue;
             }
 
+            // 4.5 If it's a character start, also consume until its finished
+            if(ch == '\''){
+                int start = i++;
+                while(i < length && sourceCode.charAt(i) != '\''){
+                    i++;
+                }
+                if(i < sourceCode.length())i++;
+                tokens.add(sourceCode.substring(start,i));
+                continue;
+            }
+
             // 5. If it's alnum/underscore/dot, consume entire run
             if (isAlnumUnderscoreDot(ch)) {
                 int start = i;

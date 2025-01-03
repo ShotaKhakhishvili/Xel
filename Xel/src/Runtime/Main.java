@@ -1,25 +1,19 @@
 package Runtime;
 
-import Compilation.Compiler;
+import Compilation.DataTypes.MultiDimArray;
+import Compilation.DataTypes.Variable;
 import Compilation.LinesToInstructions;
 import Compilation.Scope;
-import Compilation.SyntaxTree.NodeDECL;
-import Compilation.SyntaxTree.NodeINPUT;
-import Compilation.SyntaxTree.NodePRINT;
 import Compilation.SyntaxTree.TreeNode;
-import Compilation.Variable;
 import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
-import Extra.Functions;
+import Compilation.Compiler;
 import Extra.Pair;
 import Extra.Parser;
-import com.sun.source.tree.Tree;
 
-import java.security.KeyPair;
-import java.util.*;
+import java.util.Arrays;
 
 import static Compilation.CompType.*;
-import static Compilation.Decoder.*;
 
 public class Main {
     public static void main(String[] args) throws CompilationError {

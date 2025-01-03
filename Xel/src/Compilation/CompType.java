@@ -17,7 +17,7 @@ public enum CompType {
     BRK,        // Break
     CNT,        // Continue
     FCALL,      // Function Call
-    FDEC,       // Function Declaration
+    FDECL,       // Function Declaration
 
     NAME,       // Variable Name
     EXP,        // Expression
@@ -30,7 +30,9 @@ public enum CompType {
 
 
     BOOL,CHAR,BYTE,SHORT,INT,LONG,FLOAT,DOUBLE,STRING,    // Specific Variable Types
+    BOOL_ARRAY,CHAR_ARRAY,BYTE_ARRAY,SHORT_ARRAY,INT_ARRAY,LONG_ARRAY,FLOAT_ARRAY,DOUBLE_ARRAY,STRING_ARRAY,
 
+    INDX,       // Index, for array indexing
     LIT,        // Literal
     VAR,        // Variable
 

@@ -11,10 +11,10 @@ public class CompilationError extends Throwable {
         put(1,"Duplicate Variable Declaration [Error Code 1]");
         put(2,"Illegal Variable Name Declaration [Error Code 2]");
         put(5,"Illegal Character On Expression [Error Code 5]");
-        put(6,"Poor Bracket Sequence On Arithmetic Expression [Error Code 6]");
+        put(6,"Poor Bracket Sequence On Expression [Error Code 6]");
         put(7,"Illegal Operation Sequence On Expression [Error Code 7]");
-        put(8,"Not Enough Parameters On Arithmetic Expression [Error Code 8]");
-        put(9,"Unknown Argument On Arithmetic Expression [Error Code 9]");
+        put(8,"Not Enough Parameters On Expression [Error Code 8]");
+        put(9,"Unknown Argument On Expression [Error Code 9]");
         put(10,"Tried To Access An Unknown Variable[Error Code 10]");
         put(11,"Illegal Expression [Error Code 11]");
         put(12,"Unknown Assignment Operator [Error Code 12]");

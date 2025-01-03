@@ -1,6 +1,6 @@
 package Compilation.SyntaxTree;
 
-import Compilation.Variable;
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
 
 public class NodeIF extends TreeNode{
@@ -14,7 +14,7 @@ public class NodeIF extends TreeNode{
 
     @Override
     public Boolean evaluate() throws CompilationError {
-        if(!Variable.strToBool(statement.evaluate().value.toString()))
+        if(!Variable.strToBool(statement.evaluate().getValue().toString()))
             return false;
 
         getChildren().get(0).execute();

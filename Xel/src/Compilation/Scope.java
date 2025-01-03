@@ -1,8 +1,7 @@
 package Compilation;
 
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
-
-import java.util.concurrent.CompletionException;
 
 public class Scope {
 
@@ -19,7 +18,7 @@ public class Scope {
 
     public boolean containsVariable(String varName){
         Scope scope = this;
-        while(!scope.memory.getVariables().containsKey(varName)){
+        while(!scope.memory.containsVariable(varName)){
             if(scope.parentScope == null)
                 return false;
             scope = scope.parentScope;
@@ -27,7 +26,7 @@ public class Scope {
         return true;
     }
 
-    public void setVariable(String varName, String value) throws CompilationError {
+    public void setVariable(String varName, Object value) throws CompilationError {
         getOwnerMemory(varName).setVariable(varName,value);
     }
 
@@ -45,14 +44,6 @@ public class Scope {
 
 
         return scope.getMemory();
-    }
-
-    public Scope getParentScope() {
-        return parentScope;
-    }
-
-    public void setParentScope(Scope parentScope) {
-        this.parentScope = parentScope;
     }
 
     public Memory getMemory() {
