@@ -23,8 +23,9 @@ public class NodeASGM extends TreeNode {
 
     @Override
     public void execute() throws CompilationError {
-        if(type == ASGM)
+        if(type == ASGM) {
             getScope().setVariable(varName, exp.evaluate().getValue());
+        }
         else{
             BinaryOperator<Variable<?>> binaryOperator = BIOP_Functions.get(type);
             Variable<?> newValue = binaryOperator.apply(getScope().getVariable(varName), exp.evaluate());

@@ -33,13 +33,16 @@ public class CompilationError extends Throwable {
         put(25,"Invalid For Statement [Error Code 25]");
         put(26,"Brackets Were Expected [Error Code 26]");
         put(27,"Invalid Print Statement [Error Code 27]");
-        // 28
+        put(28,"Invalid Square Bracket Sequence [Error Code 28]");
         put(29,"Empty Input Statement [Error Code 29]");
         put(30,"Invalid If Statement [Error Code 30]");
         put(31,"Invalid Else-If Statement [Error Code 31]");
         put(32,"Else Statement Without An If Statement [Error Code 32]");
         put(33,"Invalid Increment Inside Expression [Error Code 33]");
         put(34,"Invalid Decrement Inside Expression [Error Code 34]");
+        put(35,"Tried To Reach Index Of Unknown Variable With Square Brackets [Error Code 35]");
+        put(36,"Invalid Array Element [Error Code 36]");
+        put(37,"Invalid Array Declaration [Error Code 37]");
     }};
     public CompilationError(String message, int line) {
         super("[Line " + line + "] " + message);

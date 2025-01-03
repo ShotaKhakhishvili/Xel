@@ -1,5 +1,6 @@
 package Compilation;
 
+import Compilation.DataTypes.MultiDimArray;
 import Compilation.SyntaxTree.*;
 import Exceptions.CompilationError;
 import Extra.Pair;
@@ -14,8 +15,11 @@ public class Compiler {
     public static int currentLine = 1;
 
     public static TreeNode compile(Pair<String[],Integer>[] instructions) throws CompilationError {
-        TreeNode currentProgram = new TreeNode(new Scope());
 
+        TreeNode currentProgram = new TreeNode(new Scope());
+//        currentProgram.getScope().getMemory().declareArray("arr",STRING,new int[]{3,3});
+//        ((MultiDimArray<String>)currentProgram.getScopeMemory().getVariable("arr")).setValue("hola amigo",1,1);
+//        System.out.println(((MultiDimArray<Integer>)currentProgram.getScopeMemory().getVariable("arr")).getValue(1,1));
         for(Pair<String[],Integer> pair : instructions){
             String[] instruction = pair.getFirst();
             currentLine = pair.getSecond();

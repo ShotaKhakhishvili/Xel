@@ -6,6 +6,8 @@ import Exceptions.CompilationError;
 
 import java.util.*;
 
+import static Compilation.CompType.ARR;
+
 public class Memory {
     private final Map<String, Variable<?>> vars = new HashMap<>();
     private final Scope owner;
@@ -19,6 +21,10 @@ public class Memory {
     public <T> void declareVariable(String varName, T varValue, CompType varType) throws CompilationError {
         vars.put(varName,new Variable<>(varValue, varType));
         setVariable(varName, varValue);
+    }
+
+    public void declareArray(String varName, CompType varType, int[] dimensions){
+        vars.put(varName,new MultiDimArray<>(varType, dimensions));
     }
 
     public Variable<?> getVariable(String varName) {

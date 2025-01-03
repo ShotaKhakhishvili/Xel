@@ -70,7 +70,6 @@ public class TreeNode {
     }
 
     public void execute() throws CompilationError {
-        scope.getMemory().delete();
         exit = false;
         boolean ifChain = false;
         for(TreeNode child : getChildren()){
