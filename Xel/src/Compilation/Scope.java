@@ -1,7 +1,11 @@
 package Compilation;
 
+import Compilation.DataTypes.MultiDimArray;
 import Compilation.DataTypes.Variable;
+import Compilation.SyntaxTree.NodeEXP;
 import Exceptions.CompilationError;
+
+import java.util.Arrays;
 
 public class Scope {
 
@@ -28,6 +32,9 @@ public class Scope {
 
     public void setVariable(String varName, Object value) throws CompilationError {
         getOwnerMemory(varName).setVariable(varName,value);
+    }
+    public void setVariable(String varName, Object value, int[] dimensions) throws CompilationError {
+        getOwnerMemory(varName).setVariable(varName,value,dimensions);
     }
 
     public Variable<?> getVariable(String varName) throws CompilationError {

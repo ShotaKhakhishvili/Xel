@@ -19,7 +19,7 @@ public class NodeINPUT extends TreeNode{
         System.out.print(printString);
         for(int i = 0; i < varNames.length; i++){
             String next = scanner.next();
-            getScopeMemory().setVariable(varNames[i], next);
+            getScopeMemory().setVariable(varNames[i], next, new int[]{});
         }
     }
 

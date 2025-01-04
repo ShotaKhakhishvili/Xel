@@ -16,6 +16,7 @@ public class NodeEXP extends TreeNode {
         this.value = value;
         this.expType = expType;
     }
+
     public String getValue(){
         return value;
     }

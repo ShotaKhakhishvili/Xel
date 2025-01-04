@@ -104,6 +104,37 @@ public class Variable<T>{
         }
     }
 
+    protected T valFromObject(Object val){
+        String value = val.toString();
+
+        if(val instanceof Character){
+            if(type != STRING)
+                value = String.valueOf(Long.valueOf((char) val));
+        }
+        else{
+            if(type == CHAR){
+                if(val instanceof String) {
+                    if(((String) val).length() > 1)
+                        throw new RuntimeError(210);
+                    value = (String.valueOf((long) ((String) val).charAt(0)));
+                }
+                else
+                    value = String.valueOf((long)val);
+            }
+        }
+        return switch (type){
+            case BOOL -> (T)((Boolean)Variable.strToBool(value));
+            case CHAR -> (T)Character.valueOf((char)Byte.parseByte(value));
+            case BYTE ->  (T)(Byte)(byte)Variable.strToLong(value);
+            case SHORT -> (T)(Short)(short)Variable.strToLong(value);
+            case INT -> (T)(Integer)(int)(Variable.strToLong(value));
+            case LONG -> (T)(Long)Variable.strToLong(value);
+            case FLOAT -> (T)(Float)(float)Variable.strToDouble(value);
+            case DOUBLE -> (T)(Double)(Variable.strToDouble(value));
+            default -> (T)value;
+        };
+    }
+
     public Variable<?> add(Variable<?> other){
         CompType thisType = getType();
         CompType otherType = other.getType();

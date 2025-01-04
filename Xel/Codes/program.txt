@@ -1,10 +1,11 @@
-char b = "a"
-b+=2
-int a = b + 10
-string str = '1' + 1
-print(str)
-print(b + " " + a)
-if(b == 'b')
-    print("yup")
-else
-    print("nope")
+int arr[4][10]
+for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 10; j++){
+        arr[i][j] = i + j
+    }
+}
+for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 10; j++){
+        print(arr[i][j])
+    }
+}

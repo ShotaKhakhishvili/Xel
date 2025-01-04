@@ -1,35 +1,46 @@
 package Compilation.DataTypes;
 
 import Compilation.CompType;
+import Exceptions.RuntimeError;
 
-import static Compilation.CompType.INT;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
+import static Compilation.CompType.*;
 
 public class MultiDimArray<T> extends Variable<T>{
     private final int[] dimensions;
     private final T[] array;
 
-    public MultiDimArray(CompType type, int... dimensions) {
-        super(INT);
+    public MultiDimArray(T[] array, CompType type, int[] dimensions) {
+        super(type);
         this.dimensions = dimensions;
-        int multiply = 1;
-        for(int dimension : dimensions)
-            multiply *= dimension;
-
-        array = (T[]) new Object[multiply];
+        this.array = array;
+        for(int i = 0; i < array.length; i++)
+            array[i] = (T)Variable.getDefaultValue(type);
     }
 
-    private int toIndex(int... indices) {
+    private int toIndex(int[] indices) {
         int index = 0;
-        for(int i = 0; i < indices.length; i++)
-            index += dimensions[i] * indices[i];
+        int multiplier = 1;
+
+        for (int i = dimensions.length - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;
+            multiplier *= dimensions[i];
+        }
+
         return index;
     }
 
-    public void setValue(T value, int... dimensions) {
-        array[toIndex(dimensions)] = value;
+    public void setValue(Object value, int[] dims) {
+        array[toIndex(dims)] = valFromObject(value);
     }
 
-    public T getValue(int... dimensions) {
-        return array[toIndex(dimensions)];
+    public T getValue(int[] dims) {
+        return array[toIndex(dims)];
+    }
+
+    public int[] getDimensions() {
+        return dimensions;
     }
 }
