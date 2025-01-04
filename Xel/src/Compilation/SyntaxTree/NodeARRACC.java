@@ -20,9 +20,9 @@ public class NodeARRACC extends NodeEXP {
         int[] dimValues = new int[getChildren().size()];
         for(int i = 0; i < getChildren().size(); i++) {
             dimValues[i] = (int) Variable.strToLong(((Variable<?>) getChildren().get(i).evaluate()).getValue().toString());
-//            System.out.println(dimValues[i]);
         }
-        return new Variable<>(((MultiDimArray<?>)getScopeMemory().getVariable(getValue())).getValue(dimValues),
-                                (getScopeMemory().getVariable(getValue())).getType());
+
+        return new Variable<>(((MultiDimArray<?>)getScope().getVariable(getValue())).getValue(dimValues),
+                                (getScope().getVariable(getValue())).getType());
     }
 }

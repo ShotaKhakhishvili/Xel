@@ -7,6 +7,7 @@ import Exceptions.CompilationError;
 import Exceptions.RuntimeError;
 import Extra.Functions;
 import Extra.Pair;
+import org.w3c.dom.Node;
 
 import java.net.Inet4Address;
 import java.util.*;
@@ -139,55 +140,32 @@ public class Decoder {
             String[] declaration = declarations[i];
             variables[i] = declaration[0];
 
-            if(parentNode.getScopeMemory().containsVariable(declaration[0]))
+            if(parentNode.getScope().containsVariable(declaration[0]))
                 throw new CompilationError(1);
 
             // For array declarations
             if(declaration.length > 1 && declaration[1].equals("[")) {
-                int j = 1;
-                List<Pair<Integer,Integer>> indices = new ArrayList<>();
-                while (j < declaration.length) {
-                    if (!declaration[j].equals("["))
-                        throw new CompilationError(37);
-                    int start = j;
-                    int cnt = 0;
-                    while (j < declaration.length) {
-                        if (declaration[j].equals("["))
-                            cnt++;
-                        if (declaration[j].equals("]"))
-                            cnt--;
-                        if (cnt == 0)
-                            break;
-                        j++;
+                Pair<List<NodeEXP>,Integer> pair = indexBracketSplitter(declaration, varType, parentNode);
+                if(pair.getSecond() != declaration.length)
+                    throw new CompilationError(37);
+                dimensions[i] = pair.getFirst();
+                if(!parentNode.getScope().containsVariable(declaration[0])){
+                    if (!invalidNameChars.contains(tokens[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0')) {
+                        int[] dims = new int[dimensions[i].size()];
+                        parentNode.getScopeMemory().declareArray(declaration[0], varType,dims);
                     }
-                    if (j == declaration.length)
-                        throw new CompilationError(37);
-                    indices.add(new Pair<>(start + 1, j));
-                    System.out.println((start + 1) + " " + (j));
-                    j++;
-                }
-                    initExps[i] = new NodeEXP(Variable.getDefaultValue(varType).toString(), LIT, parentNode);
-//                try{
-                dimensions[i] = new ArrayList<>();
-                    if(!parentNode.getScope().containsVariable(declaration[0])){
-                        for(int k = 0; k < indices.size(); k++) {
-                            dimensions[i].add(EXP_checkValidity(Arrays.copyOfRange(declaration, indices.get(k).getFirst(), indices.get(k).getSecond()), parentNode));
-                        }
-                    }
-//                }catch (RuntimeException e){
-//                    // Try catch block is used since not every Variable<?> return from getScope().getVariable() is of type MultiDimArray<?>.
-//                    // So we could get a casting error
                     else
-                        throw new CompilationError(36);
-//                }
+                        throw new CompilationError(0);
+                }
+                else
+                    throw new CompilationError(36);
+                initExps[i] = new NodeEXP(Variable.getDefaultValue(varType).toString(), LIT, parentNode);
             }
             else{
-
                 if (!invalidNameChars.contains(declaration[0].charAt(0)) && !(declaration[0].charAt(0) <= '9' && declaration[0].charAt(0) >= '0'))
                     parentNode.getScopeMemory().declareVariable(declaration[0], Variable.getDefaultValue(varType), varType);
                 else
                     throw new CompilationError(0);
-
                 if(declaration.length == 1)// Declaration without initialization
                     initExps[i] = new NodeEXP(Variable.getDefaultValue(varType).toString(), LIT, parentNode);
                 else{
@@ -204,6 +182,35 @@ public class Decoder {
         }
 
         return new NodeDECL(varTypes.get(tokens[0]), initExps, variables, dimensions, parentNode);
+    }
+
+    static Pair<List<NodeEXP>,Integer> indexBracketSplitter(String[] tokens, CompType varType, TreeNode parentNode) throws CompilationError {
+        int j = 1;
+        List<Pair<Integer,Integer>> indices = new ArrayList<>();
+        while (j < tokens.length) {
+            if (!tokens[j].equals("["))
+                break;
+            int start = j;
+            int cnt = 0;
+            while (j < tokens.length) {
+                if (tokens[j].equals("["))
+                    cnt++;
+                if (tokens[j].equals("]"))
+                    cnt--;
+                if (cnt == 0)
+                    break;
+                j++;
+            }
+            if (j == tokens.length)
+                throw new CompilationError(36);
+            indices.add(new Pair<>(start + 1, j));
+            j++;
+        };
+        List<NodeEXP> dimensions = new ArrayList<>();
+        for (Pair<Integer, Integer> index : indices) {
+            dimensions.add(EXP_checkValidity(Arrays.copyOfRange(tokens, index.getFirst(), index.getSecond()), parentNode));
+        }
+        return new Pair<>(dimensions, j);
     }
 
     static NodeEXP EXP_checkValidity( String[] parts, TreeNode parentNode) throws CompilationError {
@@ -286,6 +293,57 @@ public class Decoder {
         throw new CompilationError(11);//CODE11
     }
 
+    static NodeARRACC indexBracketSolver(String[] tokens, int l, int r, TreeNode parentNode) throws CompilationError {
+        if(tokens[r-1].equals("]")){
+            List<Pair<Integer,Integer>> indices = new ArrayList<>();
+            int i = r-1;
+            while(tokens[i].equals("]")){
+                int cnt = 0;
+                int start = i;
+                while(i >= l){
+                    if(tokens[i].equals("["))
+                        cnt--;
+                    if(tokens[i].equals("]"))
+                        cnt++;
+                    if(cnt == 0)
+                        break;
+                    i--;
+                }
+                if(i < l)
+                    throw new CompilationError(28);
+                if(tokens[i].equals("["))
+                    indices.add(new Pair<>(i+1,start));
+                i--;
+                if(i < l)
+                    throw new CompilationError(35);
+            }
+
+            // If after iterating all the '[' and ']' brackets, we have reached the last element of this part of the sequence,
+            // Then this last token is a name of the multidimensional array.
+            // Now we have to check if such variable exist in memory and has the same amount of dimensions as the programmer demands
+            if(i == l) {
+                try{
+                    if(parentNode.getScope().containsVariable(tokens[l]) &&
+                            ((MultiDimArray<?>)parentNode.getScope().getVariable(tokens[l])).getDimensions().length == indices.size()){
+                        NodeARRACC answer = new NodeARRACC(tokens[l], parentNode);
+                        for (int j = indices.size()-1; j >= 0; j--){
+                            Pair<Integer,Integer> index = indices.get(j);
+                            answer.addChild(EXP_checkValidity(Arrays.copyOfRange(tokens, index.getFirst(), index.getSecond()), answer));
+                        }
+                        return answer;
+                    }
+                }catch (RuntimeException e){
+                    // Try catch block is used since not every Variable<?> return from getScope().getVariable() is of type MultiDimArray<?>.
+                    // So we could get a casting error
+                    throw new CompilationError(36);
+                }
+                // If these fail, then we can throw an exception.
+                throw new CompilationError(36);
+            }
+        }
+        return null;
+    }
+
     static NodeEXP edgeCases(String[] tokens,int l, int r, TreeNode parentNode) throws CompilationError {
         if(r - l == 0)
             throw  new CompilationError(8);//CODE8
@@ -331,52 +389,9 @@ public class Decoder {
         }
         // This one is for array indexing checks
         if(r - l >= 2){
-            if(tokens[r-1].equals("]")){
-                List<Pair<Integer,Integer>> indices = new ArrayList<>();
-                int i = r-1;
-                while(tokens[i].equals("]")){
-                    int cnt = 0;
-                    int start = i;
-                    while(i >= l){
-                        if(tokens[i].equals("["))
-                            cnt--;
-                        if(tokens[i].equals("]"))
-                            cnt++;
-                        if(cnt == 0)
-                            break;
-                        i--;
-                    }
-                    if(i < l)
-                        throw new CompilationError(28);
-                    if(tokens[i].equals("["))
-                        indices.add(new Pair<>(i+1,start));
-                    i--;
-                    if(i < l)
-                        throw new CompilationError(35);
-                }
-
-                // If after iterating all the '[' and ']' brackets, we have reached the last element of this part of the sequence,
-                // Then this last token is a name of the multidimensional array.
-                // Now we have to check if such variable exist in memory and has the same amount of dimensions as the programmer demands
-                if(i == l) {
-                    try{
-                        if(parentNode.getScope().containsVariable(tokens[l]) &&
-                                ((MultiDimArray<?>)parentNode.getScope().getVariable(tokens[l])).getDimensions().length == indices.size()){
-                            NodeARRACC answer = new NodeARRACC(tokens[l], parentNode);
-                            for(; i < indices.size(); i++)
-                                answer.addChild(EXP_checkValidity(Arrays.copyOfRange(tokens,indices.get(i).getFirst(), indices.get(i).getSecond()), answer));
-                            return answer;
-                        }
-                    }catch (RuntimeException e){
-                        // Try catch block is used since not every Variable<?> return from getScope().getVariable() is of type MultiDimArray<?>.
-                        // So we could get a casting error
-                        throw new CompilationError(36);
-                    }
-                    System.out.println(parentNode.getScope().getMemory().getVariables().size());
-                    // If these fail, then we can throw an exception.
-                    throw new CompilationError(36);
-                }
-            }
+            NodeEXP answer = indexBracketSolver(tokens,l,r,parentNode);
+            if(answer != null)
+                return answer;
         }
         switch (tokens[l]) {
             case "!" -> {
@@ -408,34 +423,56 @@ public class Decoder {
             throw new CompilationError(11);//CODE11
 
         CompType asgm;
-        NodeEXP exp = null;
+        NodeEXP exp;
+        List<NodeEXP> dimensions = null;
 
-        if(tokens[1].equals("="))
+        int i = 1;
+        if(tokens[1].equals("[")){
+            Pair<List<NodeEXP>,Integer> pair = indexBracketSplitter(tokens, parentNode.getScope().getVariable(tokens[0]).getType(), parentNode);
+            dimensions = pair.getFirst();
+            i = pair.getSecond();
+            if(i == tokens.length)
+                throw new CompilationError(12);
+        }
+
+        List<String> newTokens = new ArrayList<>();
+
+        for(int j = 0; j < i; j++)
+            newTokens.add(tokens[j]);
+        newTokens.add("=");
+        for(int j = 0; j < i; j++)
+            newTokens.add(tokens[j]);
+        newTokens.add("?");
+        newTokens.add("1");
+
+        if(tokens[i].equals("="))
             asgm = ASGM;
-        else if(tokens[1].equals("++")){
-            if(tokens.length > 2)
+        else if(tokens[i].equals("++")){
+            if(tokens.length > i+1)
                 throw new CompilationError(17);
             asgm = ASGM;
-            tokens = new String[]{tokens[0],"=",tokens[0],"+","1"};
+            tokens = newTokens.toArray(new String[0]);
+            tokens[tokens.length-2] = "+";
         }
-        else if(tokens[1].equals("--")){
-            if(tokens.length > 2)
+        else if(tokens[i].equals("--")){
+            if(tokens.length > i+1)
                 throw new CompilationError(18);
             asgm = ASGM;
-            tokens = new String[]{tokens[0],"=",tokens[0],"-","1"};
+            tokens = newTokens.toArray(new String[0]);
+            tokens[tokens.length-2] = "+";
         }
-        else if(OP_Types.containsKey(String.valueOf(tokens[1].charAt(0)))){
-            if(tokens[1].length() == 2 && tokens[1].charAt(1) == '=')
-                asgm = OP_Types.get(String.valueOf(tokens[1].charAt(0)));
+        else if(OP_Types.containsKey(String.valueOf(tokens[i].charAt(0)))){
+            if(tokens[i].length() == 2 && tokens[i].charAt(1) == '=')
+                asgm = OP_Types.get(String.valueOf(tokens[i].charAt(0)));
             else
                 throw new CompilationError(12);//CODE12
         }
         else
             throw new CompilationError(12);//CODE12
 
-        exp = EXP_checkValidity(Arrays.copyOfRange(tokens,2, tokens.length), parentNode);
+        exp = EXP_checkValidity(Arrays.copyOfRange(tokens,i+1, tokens.length), parentNode);
 
-        return new NodeASGM(tokens[0], asgm, exp, parentNode);
+        return new NodeASGM(tokens[0], asgm, exp, dimensions, parentNode);
     }
 
     static NodePRINT PRINT_checkValidity(String[] tokens, TreeNode parentNode) throws CompilationError {

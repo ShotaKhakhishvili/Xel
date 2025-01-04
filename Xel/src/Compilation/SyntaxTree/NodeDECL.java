@@ -1,8 +1,12 @@
 package Compilation.SyntaxTree;
 
 import Compilation.CompType;
+import Compilation.DataTypes.MultiDimArray;
+import Compilation.DataTypes.Variable;
 import Exceptions.CompilationError;
 
+import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.List;
 
 public class NodeDECL extends TreeNode {

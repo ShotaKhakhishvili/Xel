@@ -71,6 +71,7 @@ public class TreeNode {
 
     public void execute() throws CompilationError {
         exit = false;
+        getScopeMemory().delete();
         boolean ifChain = false;
         for(TreeNode child : getChildren()){
             try {
