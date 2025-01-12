@@ -140,7 +140,7 @@ public class Decoder {
             String[] declaration = declarations[i];
             variables[i] = declaration[0];
 
-            if(parentNode.getScope().containsVariable(declaration[0]))
+            if(parentNode.getScopeMemory().containsVariable(declaration[0]))
                 throw new CompilationError(1);
 
             // For array declarations
